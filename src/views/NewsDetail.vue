@@ -28,3 +28,9 @@ function goBack() {
     <section v-else class="section"><div class="wrap state"><h1>Actualité introuvable</h1><button class="btn gold" type="button" @click="goBack">Retour aux actualités</button></div></section>
   </div>
 </template>
+
+<style scoped>
+.page-top.news-detail-page {
+  padding-top: 5rem;
+}
+</style>
