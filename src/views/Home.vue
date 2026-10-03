@@ -6,14 +6,17 @@ import Ranking from '../components/Ranking.vue'
 import GallerySlider from '../components/GallerySlider.vue'
 import { competition, statusLabel } from '../composables/useCompetition'
 import { candidateService, rankingService, categoryService, contentService } from '../services'
-import { coaches, contact, gallerySlides, teamMembers } from '../data/content'
-const feat = ref([]), ranking = ref([]), cats = ref([]), news = ref([])
+import { contact, gallerySlides } from '../data/content'
+const feat = ref([]), ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([])
 const showWhatsapp = ref(false)
 const updateWhatsappVisibility = () => { showWhatsapp.value = window.scrollY > 250 }
 onMounted(async () => {
   updateWhatsappVisibility()
   window.addEventListener('scroll', updateWhatsappVisibility, { passive: true });
-  [ranking.value, cats.value, news.value] = await Promise.all([rankingService.getRanking(), categoryService.getCategories(), contentService.getNews()])
+  [ranking.value, cats.value, news.value, coaches.value, teamMembers.value] = await Promise.all([
+    rankingService.getRanking(), categoryService.getCategories(), contentService.getNews(),
+    contentService.getTeam('coach'), contentService.getTeam('team'),
+  ])
   feat.value = (await candidateService.getCandidates()).slice(0, 4)
 })
 onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility))
@@ -74,7 +77,8 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
     <section class="section alt">
       <div class="wrap">
         <div class="title" v-reveal>
-          <h2 class="gold-text">Domaines d'excellence</h2>
+          <h2 class="gold-text">Les catégories</h2>
+          <p>{{ cats.length }} catégorie{{ cats.length === 1 ? '' : 's' }} · Choisissez et soutenez vos nominés.</p>
         </div>
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))"><router-link
             v-for="c in cats" :key="c.id" :to="{ path: '/talents', query: { cat: c.id } }" class="card cat"

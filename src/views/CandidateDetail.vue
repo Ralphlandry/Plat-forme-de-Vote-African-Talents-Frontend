@@ -4,7 +4,6 @@ import Avatar from '../components/Avatar.vue'
 import Countdown from '../components/Countdown.vue'
 import { candidateService, rankingService } from '../services'
 import { competition, openShare, openVote, statusLabel } from '../composables/useCompetition'
-import { categories } from '../data/categories'
 const props = defineProps({ id: String })
 const c = ref(null), rank = ref(null), err = ref('')
 const glow = ref({ x: 0, y: 0, visible: false })
@@ -18,7 +17,7 @@ function hideGlow() {
 }
 watchEffect(async () => {
   c.value = null; err.value = ''
-  try { c.value = await candidateService.getCandidate(props.id); rank.value = (await rankingService.getRanking()).find(x => x.id === props.id)?.rank; document.title = `${c.value.name} · African Talents` }
+  try { c.value = await candidateService.getCandidate(props.id); rank.value = c.value.rank ?? (await rankingService.getRanking()).find(x => x.slug === props.id)?.rank; document.title = `${c.value.name} · African Talents` }
   catch (e) { err.value = e.message }
 })
 </script>
@@ -30,7 +29,7 @@ watchEffect(async () => {
   <div v-if="err" class="state">{{ err }}</div><div v-else-if="!c" class="state"><div class="spin"></div></div>
   <div v-else class="detail" style="margin-top:1.5rem">
     <div class="big"><Avatar :c="c" /></div>
-    <div><span class="chip">{{ categories.find(x => x.id === c.category)?.label }} · n°{{ c.number }}</span>
+    <div><span class="chip">{{ c.categoryName || c.category }} · n°{{ c.code || c.number }}</span>
       <h1 class="gold-text" style="margin:.8rem 0;font-size:clamp(2.3rem,5vw,3.6rem)">{{ c.name }}</h1>
       <p style="color:var(--mut)">{{ c.bio }}</p>
       <div class="facts"><div><b class="gold-text">{{ c.votes.toLocaleString('fr-FR') }}</b>votes</div><div><b class="gold-text">#{{ rank }}</b>classement</div></div>
