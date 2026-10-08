@@ -28,16 +28,18 @@ defineProps({ c: Object })
   aspect-ratio: 3 / 3.2;
 }
 
-.candidate-photo-link {
-  position: relative;
+.cand .ph > .candidate-photo-link {
+  display: block;
+  position: absolute;
+  inset: 0;
   isolation: isolate;
 }
 
 .candidate-photo-link::after {
   position: absolute;
   z-index: 0;
-  inset: 30% 0 0;
-  background: linear-gradient(transparent, rgb(3 9 25 / 92%));
+  inset: 24% 0 0;
+  background: linear-gradient(transparent, rgb(7 23 56 / 96%));
   content: '';
   pointer-events: none;
 }
@@ -59,8 +61,10 @@ defineProps({ c: Object })
 
 .candidate-overlay h3 {
   margin-top: 0.45rem;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 1.55rem;
   line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .candidate-code {

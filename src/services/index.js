@@ -43,7 +43,7 @@ function mapCategory(category) {
 
 function mapCandidate(candidate) {
   const number = Number(candidate.code?.match(/\d+$/)?.[0] || 0)
-  const name = candidate.display_name || [candidate.first_name, candidate.last_name].filter(Boolean).join(' ')
+  const name = [candidate.last_name, candidate.first_name].filter(Boolean).join(' ') || candidate.display_name || ''
   const categoryName = candidate.category?.name || candidate.category_name || ''
   return {
     id: String(candidate.id),
@@ -140,6 +140,13 @@ export const contentService = {
         image: member.photo?.url || '',
         description: member.bio || '',
       }))
+  },
+  async getPartners() {
+    return (await getList('/public/partners/')).map(partner => ({
+      id: partner.id,
+      name: partner.name,
+      logo: partner.logo?.url || '',
+    })).filter(partner => partner.logo)
   },
 }
 

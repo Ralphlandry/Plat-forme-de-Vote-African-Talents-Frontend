@@ -115,7 +115,7 @@ function resumePaymentCheck() {
         <h2 id="vote-title">Finaliser votre vote</h2>
         <button class="modal-close" type="button" aria-label="Fermer" @click="close">×</button>
       </header>
-      <template v-if="state === 'form'">
+      <template v-if="['form', 'loading', 'pending'].includes(state)">
         <section class="vote-section">
           <h3>Choisissez un forfait :</h3>
           <p v-if="packagesLoading" class="vote-note">Chargement des forfaits…</p>
@@ -142,36 +142,53 @@ function resumePaymentCheck() {
               @input="phone = normalizePhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
         </div>
         <label class="consent"><input v-model="accepted" type="checkbox" /><span>J'accepte les <b>conditions d'utilisation</b> et l'utilisation de mon numéro pour le suivi des votes <b>(confidentialité)</b>.</span></label>
-        <p v-if="msg" class="vote-error">{{ msg }}</p><button class="btn gold vote-submit" type="button"
-          :disabled="!canSubmit" @click="submit">Confirmer et payer {{ formatAmount(total) }}</button>
+        <p v-if="msg && state === 'form'" class="vote-error">{{ msg }}</p><button class="btn gold vote-submit" type="button"
+          :disabled="!canSubmit || state !== 'form'" @click="submit">{{ state === 'loading' ? 'Traitement…' : `Confirmer et payer ${formatAmount(total)}` }}</button>
         <p class="vote-note">Vos votes seront ajoutés après validation du paiement par l’API.</p>
-      </template>
-      <template v-else-if="state === 'loading'">
-        <div class="vote-state">
-          <h3>Confirmation du paiement…</h3>
-          <div class="spin"></div>
-          <p>En attente de la confirmation sécurisée du prestataire.</p>
-        </div>
-      </template>
-      <template v-else-if="state === 'pending'">
-        <div class="vote-state">
-          <h3>Paiement en attente</h3>
-          <p>{{ msg }}</p>
-          <button class="btn gold" type="button" @click="resumePaymentCheck">Vérifier à nouveau</button>
-          <button class="btn" type="button" @click="close">Fermer</button>
+        <div v-if="state === 'loading' || state === 'pending'" class="payment-wait-overlay">
+          <section class="payment-wait-card" role="status" aria-live="polite">
+            <div class="spin payment-wait-spinner"></div>
+            <h3>Validez sur votre téléphone {{ paymentMethod === 'ORANGE' ? 'Orange' : 'MTN' }}</h3>
+            <p v-if="paymentMethod === 'ORANGE'" class="payment-wait-intro">Composez #150*50# sur votre téléphone Orange, puis validez avec votre code secret Orange Money.</p>
+            <p v-else class="payment-wait-intro">Demande MTN envoyée. Validez le menu USSD Push sur votre téléphone avec votre code secret MTN.</p>
+            <ol v-if="paymentMethod === 'ORANGE'" class="payment-wait-steps">
+              <li>Composez #150*50# sur votre téléphone Orange</li>
+              <li>Saisissez votre code secret Orange Money pour confirmer</li>
+              <li>Gardez cette page ouverte jusqu’à la confirmation</li>
+            </ol>
+            <ol v-else class="payment-wait-steps">
+              <li>Déverrouillez votre téléphone</li>
+              <li>Acceptez le menu USSD Push qui s’affiche</li>
+              <li>Confirmez avec votre code secret MTN</li>
+            </ol>
+            <p v-if="state === 'pending' && msg" class="payment-wait-status">{{ msg }}</p>
+            <p class="payment-wait-note">Gardez cette page ouverte le temps de valider sur votre téléphone.</p>
+            <div v-if="state === 'pending'" class="payment-wait-actions">
+              <button class="btn gold" type="button" @click="resumePaymentCheck">Vérifier à nouveau</button>
+              <button class="btn" type="button" @click="close">Fermer</button>
+            </div>
+          </section>
         </div>
       </template>
       <template v-else-if="state === 'success'">
-        <div class="vote-state">
-          <h3 class="gold-text">Vote enregistré ✓</h3>
-          <p>Merci ! {{ voteTarget.name }} compte maintenant {{ voteTarget.votes.toLocaleString('fr-FR') }} votes.</p>
-          <button class="btn gold" type="button" @click="close">Fermer</button>
+        <div class="result-overlay success-sheet">
+          <div class="result-box success-box">
+            <div class="status-icon success-icon"><span>✓</span></div>
+            <h3 class="status-title success">Paiement validé</h3>
+            <p class="status-message success">Merci ! {{ voteTarget.name }} compte maintenant {{ voteTarget.votes.toLocaleString('fr-FR') }} votes.</p>
+            <button class="btn gold modal-success-btn" type="button" @click="close">Fermer</button>
+          </div>
         </div>
       </template>
       <template v-else>
-        <div class="vote-state">
-          <h3>Vote non enregistré</h3>
-          <p>{{ msg }}</p><button class="btn gold" type="button" @click="state = 'form'">Réessayer</button>
+        <div class="result-overlay error-sheet">
+          <div class="result-box error-box">
+            <div class="status-icon error-icon"><span>×</span></div>
+            <h3 class="status-title error">Paiement échoué</h3>
+            <p class="status-message error">{{ msg || 'Numéro incorrect ou non reconnu par l’opérateur. Vérifie ton numéro.' }}</p>
+            <div class="status-badge error-badge">Aucun vote n’a été comptabilisé</div>
+            <button class="btn gold modal-error-btn" type="button" @click="close">Fermer</button>
+          </div>
         </div>
       </template>
     </div>

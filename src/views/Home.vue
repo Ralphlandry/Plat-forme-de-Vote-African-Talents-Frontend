@@ -1,23 +1,21 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import Countdown from '../components/Countdown.vue'
-import CandidateCard from '../components/CandidateCard.vue'
 import Ranking from '../components/Ranking.vue'
 import GallerySlider from '../components/GallerySlider.vue'
 import { competition, statusLabel } from '../composables/useCompetition'
-import { candidateService, rankingService, categoryService, contentService } from '../services'
+import { rankingService, categoryService, contentService } from '../services'
 import { contact, gallerySlides } from '../data/content'
-const feat = ref([]), ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([])
+const ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([]), partners = ref([])
 const showWhatsapp = ref(false)
 const updateWhatsappVisibility = () => { showWhatsapp.value = window.scrollY > 250 }
 onMounted(async () => {
   updateWhatsappVisibility()
   window.addEventListener('scroll', updateWhatsappVisibility, { passive: true });
-  [ranking.value, cats.value, news.value, coaches.value, teamMembers.value] = await Promise.all([
+  [ranking.value, cats.value, news.value, coaches.value, teamMembers.value, partners.value] = await Promise.all([
     rankingService.getRanking(), categoryService.getCategories(), contentService.getNews(),
-    contentService.getTeam('coach'), contentService.getTeam('team'),
+    contentService.getTeam('coach'), contentService.getTeam('team'), contentService.getPartners(),
   ])
-  feat.value = (await candidateService.getCandidates()).slice(0, 4)
 })
 onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility))
 </script>
@@ -38,19 +36,6 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
         </div>
         <div class="hero-logo"><img src="/logo.jpg"
             alt="African Talents, la plate-forme où vous êtes impactés pour impacter" fetchpriority="high" /></div>
-      </div>
-    </section>
-    <section class="section alt">
-      <div class="wrap">
-        <div class="title" v-reveal>
-          <h2 class="gold-text">Prêt à soutenir votre favori ?</h2>
-          <p>Cliquez sur un profil pour découvrir le parcours du candidat, puis votez.</p>
-        </div>
-        <div class="grid">
-          <CandidateCard v-for="c in feat" :key="c.id" :c="c" />
-        </div>
-        <p style="text-align:center;margin-top:2.5rem"><router-link to="/talents" class="btn">Voir tous les
-            talents</router-link></p>
       </div>
     </section>
     <section class="section">
@@ -123,6 +108,20 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
               <h3>{{ member.name }}</h3><span>{{ member.role }}</span>
             </div>
           </article>
+        </div>
+      </div>
+    </section>
+    <section v-if="partners.length" class="partners-section">
+      <div class="wrap">
+        <div class="partners-heading" v-reveal>
+          <h2>Nos Partenaires</h2>
+          <p>Ils nous soutiennent</p>
+        </div>
+        <div class="partners-list">
+          <div v-for="partner in partners" :key="partner.id" class="partner-mark" v-reveal>
+            <img :src="partner.logo" :alt="partner.name" loading="lazy" />
+            <span>{{ partner.name }}</span>
+          </div>
         </div>
       </div>
     </section>
@@ -214,6 +213,60 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
   line-height: 1.8;
 }
 
+.partners-section {
+  padding: 3.5rem 0;
+  background: #fff;
+  color: #0b1f52;
+}
+
+.partners-heading {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.partners-heading h2 {
+  color: #0b1f52;
+  font-size: 2rem;
+}
+
+.partners-heading p {
+  margin-top: 0.35rem;
+  color: #52658f;
+}
+
+.partners-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.partner-mark {
+  display: grid;
+  width: min(180px, calc(50% - 0.75rem));
+  min-height: 130px;
+  align-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e7f0;
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+}
+
+.partner-mark img {
+  width: 100%;
+  height: 64px;
+  object-fit: contain;
+}
+
+.partner-mark span {
+  color: #0b1f52;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 @media (max-width: 700px) {
   .scene-programs {
     padding: 3rem 0;
@@ -231,6 +284,14 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
   .scene-programs-copy blockquote {
     padding-left: 1.1rem;
     font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .partner-mark {
+    width: calc(50% - 0.65rem);
+    min-height: 112px;
+    padding: 0.7rem;
   }
 }
 
