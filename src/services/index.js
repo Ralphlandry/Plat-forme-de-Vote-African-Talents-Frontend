@@ -189,28 +189,6 @@ export const ticketService = {
   async getTypes() {
     return getList('/public/ticket-types/')
   },
-  async getPreviewTypes() {
-    return getList('/public/ticket-previews/')
-  },
-  async downloadPreviewPdf(ticketClass) {
-    const response = await fetch(
-      `${API_BASE_URL}/public/ticket-previews/${encodeURIComponent(ticketClass)}/pdf/`,
-      { credentials: 'include' },
-    )
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}))
-      throw new Error(body.message || body.detail || `L’aperçu PDF n'a pas pu être téléchargé (${response.status}).`)
-    }
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `apercu-${ticketClass.toLowerCase()}.pdf`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  },
   async createOrder({ ticketType, firstName, lastName, phone, operator, promoCode }) {
     return request('/public/ticket-orders/', {
       method: 'POST',

@@ -6,8 +6,6 @@ import { competitionService, ticketService } from '../services'
 const route = useRoute()
 const ticketTypes = ref([])
 const ticketSalesOpen = ref(false)
-const previewLoading = ref('')
-const previewError = ref('')
 const competitionStartDate = ref('')
 const selectedType = ref('')
 const purchaseModalOpen = ref(false)
@@ -91,7 +89,7 @@ async function loadTickets() {
   error.value = ''
   try {
     const [types, competition] = await Promise.all([
-      ticketService.getPreviewTypes(),
+      ticketService.getTypes(),
       competitionService.getStatus(),
     ])
     ticketTypes.value = types
@@ -101,18 +99,6 @@ async function loadTickets() {
     error.value = err.message || 'Les billets ne sont pas disponibles pour le moment.'
   } finally {
     loading.value = false
-  }
-}
-
-async function downloadTicketPreview(ticketClass) {
-  previewLoading.value = ticketClass
-  previewError.value = ''
-  try {
-    await ticketService.downloadPreviewPdf(ticketClass)
-  } catch (err) {
-    previewError.value = err.message || 'Impossible de télécharger cet aperçu.'
-  } finally {
-    previewLoading.value = ''
   }
 }
 
@@ -221,7 +207,6 @@ loadTickets()
         </header>
 
         <div v-if="error && !purchaseModalOpen" class="ticket-message error" role="alert">{{ error }}</div>
-        <div v-if="previewError" class="ticket-message error" role="alert">{{ previewError }}</div>
         <div v-if="!order">
           <div v-if="loading && !ticketTypes.length" class="state">Chargement des billets…</div>
           <div v-else-if="!ticketTypes.length" class="ticket-message">
@@ -229,7 +214,7 @@ loadTickets()
           </div>
           <div v-else class="ticket-checkout">
             <p v-if="!ticketSalesOpen" class="ticket-message">
-              La vente n’est pas encore ouverte. Vous pouvez télécharger les aperçus ; ils ne permettent pas d’entrer à l’événement.
+              La vente des billets n’est pas encore ouverte. Revenez bientôt.
             </p>
             <section class="ticket-packages" aria-labelledby="ticket-package-title">
               <div class="section-heading">
@@ -267,14 +252,6 @@ loadTickets()
                       <span aria-hidden="true">✓</span>{{ benefit }}
                     </li>
                   </ul>
-                  <button
-                    class="package-select"
-                    type="button"
-                    :disabled="previewLoading === ticket.ticket_class"
-                    @click="downloadTicketPreview(ticket.ticket_class)"
-                  >
-                    {{ previewLoading === ticket.ticket_class ? 'Préparation de l’aperçu…' : 'Télécharger l’aperçu PDF' }}
-                  </button>
                   <button
                     class="package-select"
                     :class="{ 'package-select-active': selectedType === String(ticket.id) }"
