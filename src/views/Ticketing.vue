@@ -5,6 +5,9 @@ import { competitionService, ticketService } from '../services'
 
 const route = useRoute()
 const ticketTypes = ref([])
+const ticketSalesOpen = ref(false)
+const previewLoading = ref('')
+const previewError = ref('')
 const competitionStartDate = ref('')
 const selectedType = ref('')
 const purchaseModalOpen = ref(false)
@@ -35,13 +38,11 @@ const ticketBenefits = {
   CLASSIC: [
     'Accès à la salle',
     'Une entrée nominative',
-    'Billet sécurisé avec QR code',
   ],
   VIP: [
     'Accès aux premières places',
     'Une boisson incluse',
-    'Photos avec la star',
-    'Billet sécurisé avec QR code',
+    'Photos avec les Stars',
   ],
 }
 
@@ -90,15 +91,28 @@ async function loadTickets() {
   error.value = ''
   try {
     const [types, competition] = await Promise.all([
-      ticketService.getTypes(),
+      ticketService.getPreviewTypes(),
       competitionService.getStatus(),
     ])
     ticketTypes.value = types
+    ticketSalesOpen.value = competition.ticketSalesOpen
     competitionStartDate.value = competition.startDate || types[0]?.competition_start_date || ''
   } catch (err) {
     error.value = err.message || 'Les billets ne sont pas disponibles pour le moment.'
   } finally {
     loading.value = false
+  }
+}
+
+async function downloadTicketPreview(ticketClass) {
+  previewLoading.value = ticketClass
+  previewError.value = ''
+  try {
+    await ticketService.downloadPreviewPdf(ticketClass)
+  } catch (err) {
+    previewError.value = err.message || 'Impossible de télécharger cet aperçu.'
+  } finally {
+    previewLoading.value = ''
   }
 }
 
@@ -202,17 +216,21 @@ loadTickets()
           </p>
           <div class="event-summary">
             <span class="event-summary-icon" aria-hidden="true">♫</span>
-            <span><strong>Finale du concours de chant</strong><small>{{ eventDateLabel }} · 16 h · Arena Bonamoussadi, Douala</small></span>
+            <span><strong>Finale du concours de chant</strong><small>{{ eventDateLabel }} · 15 h · Arena Bonamoussadi, Douala</small></span>
           </div>
         </header>
 
         <div v-if="error && !purchaseModalOpen" class="ticket-message error" role="alert">{{ error }}</div>
+        <div v-if="previewError" class="ticket-message error" role="alert">{{ previewError }}</div>
         <div v-if="!order">
           <div v-if="loading && !ticketTypes.length" class="state">Chargement des billets…</div>
           <div v-else-if="!ticketTypes.length" class="ticket-message">
-            La vente des billets n’est pas encore ouverte. Revenez bientôt.
+            Aucun pass n’est disponible pour le moment.
           </div>
           <div v-else class="ticket-checkout">
+            <p v-if="!ticketSalesOpen" class="ticket-message">
+              La vente n’est pas encore ouverte. Vous pouvez télécharger les aperçus ; ils ne permettent pas d’entrer à l’événement.
+            </p>
             <section class="ticket-packages" aria-labelledby="ticket-package-title">
               <div class="section-heading">
                 <div>
@@ -245,18 +263,27 @@ loadTickets()
                     </p>
                   </div>
                   <ul class="package-benefits">
-                    <li v-for="benefit in ticketBenefits[ticket.ticket_class] || ['Une entrée nominative', 'Billet sécurisé avec QR code']" :key="benefit">
+                    <li v-for="benefit in ticketBenefits[ticket.ticket_class] || ['Une entrée nominative']" :key="benefit">
                       <span aria-hidden="true">✓</span>{{ benefit }}
                     </li>
                   </ul>
                   <button
                     class="package-select"
+                    type="button"
+                    :disabled="previewLoading === ticket.ticket_class"
+                    @click="downloadTicketPreview(ticket.ticket_class)"
+                  >
+                    {{ previewLoading === ticket.ticket_class ? 'Préparation de l’aperçu…' : 'Télécharger l’aperçu PDF' }}
+                  </button>
+                  <button
+                    class="package-select"
                     :class="{ 'package-select-active': selectedType === String(ticket.id) }"
                     type="button"
-                    :aria-pressed="selectedType === String(ticket.id)"
+                    :disabled="!ticketSalesOpen"
+                    :aria-pressed="ticketSalesOpen && selectedType === String(ticket.id)"
                     @click="selectTicket(ticket.id, $event)"
                   >
-                    {{ selectedType === String(ticket.id) ? 'Pass sélectionné' : 'Choisir ce pass' }}
+                    {{ !ticketSalesOpen ? 'Vente bientôt disponible' : selectedType === String(ticket.id) ? 'Pass sélectionné' : 'Choisir ce pass' }}
                   </button>
                 </article>
               </div>
