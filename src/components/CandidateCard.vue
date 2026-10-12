@@ -6,7 +6,7 @@ defineProps({ c: Object })
 <template>
   <article class="card cand" v-reveal>
     <div class="ph">
-      <router-link class="candidate-photo-link" :to="`/talents/${c.slug || c.id}`" :aria-label="`Profil de ${c.name}`">
+      <router-link class="candidate-photo-link" :to="`/candidats/${c.slug || c.id}`" :aria-label="`Profil de ${c.name}`">
         <Avatar :c="c" />
         <div class="candidate-overlay">
           <span class="chip">{{ c.categoryName || c.category }}</span>
@@ -18,7 +18,7 @@ defineProps({ c: Object })
     </div>
     <div class="body candidate-body">
       <div class="row"><span>Votes</span><b>{{ c.votes.toLocaleString('fr-FR') }}</b></div>
-      <div class="acts"><router-link :to="`/talents/${c.slug || c.id}`" class="btn">Profil</router-link>
+      <div class="acts"><router-link :to="`/candidats/${c.slug || c.id}`" class="btn">Profil</router-link>
         <button class="btn gold" :disabled="competition.status !== 'open'" @click="openVote(c)">Voter</button></div></div>
   </article>
 </template>

@@ -5,7 +5,7 @@ import { shareTarget } from '../composables/useCompetition'
 
 const copied = ref(false)
 const canNativeShare = typeof navigator !== 'undefined' && Boolean(navigator.share)
-const shareUrl = computed(() => shareTarget.value ? `${window.location.origin}/talents/${shareTarget.value.id}` : '')
+const shareUrl = computed(() => shareTarget.value ? `${window.location.origin}/candidats/${shareTarget.value.slug || shareTarget.value.id}` : '')
 const shareText = computed(() => shareTarget.value ? `Je soutiens ${shareTarget.value.name} - votez pour mon favori !` : '')
 watch(shareTarget, () => { copied.value = false })
 const close = () => { shareTarget.value = null }
@@ -34,13 +34,10 @@ const socialLinks = computed(() => {
 </script>
 
 <template>
-  <dialog v-if="shareTarget" open class="share-modal modal" @click.self="close" @keydown.esc="close" aria-labelledby="share-title">
+  <dialog v-if="shareTarget" open class="share-modal modal" @click.self="close" @keydown.esc="close" aria-label="Options de partage">
     <div class="share-box">
       <button class="modal-close" type="button" aria-label="Fermer" @click="close">×</button>
-      <div class="share-head">
-        <Avatar :c="shareTarget" class="share-avatar" />
-        <div><h2 id="share-title">Partager {{ shareTarget.name }}</h2><p>Invitez vos proches à soutenir ce talent.</p></div>
-      </div>
+      <Avatar :c="shareTarget" class="share-avatar" />
       <div class="share-actions">
         <button class="btn gold" type="button" @click="copyLink">{{ copied ? 'Lien copie !' : 'Copier le lien' }}</button>
         <button v-if="canNativeShare" class="btn" type="button" @click="shareNative">Partager...</button>

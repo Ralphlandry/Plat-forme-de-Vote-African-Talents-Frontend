@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import Countdown from '../components/Countdown.vue'
 import Ranking from '../components/Ranking.vue'
 import GallerySlider from '../components/GallerySlider.vue'
@@ -7,6 +7,8 @@ import { competition, statusLabel } from '../composables/useCompetition'
 import { rankingService, categoryService, contentService } from '../services'
 import { contact, gallerySlides } from '../data/content'
 const ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([]), partners = ref([])
+const teamLeadership = computed(() => teamMembers.value.slice(0, 2))
+const teamSecondLevel = computed(() => teamMembers.value.slice(2))
 const showWhatsapp = ref(false)
 const updateWhatsappVisibility = () => { showWhatsapp.value = window.scrollY > 250 }
 onMounted(async () => {
@@ -28,11 +30,11 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
           <h1 class="gold-text" style="margin-top:1rem">African Talents</h1>
           <h2 style="font-size:clamp(1.4rem,3vw,2.1rem);font-weight:600">La plate-forme où vous êtes impactés pour
             impacter</h2>
-          <p class="lead">La plateforme panafricaine qui révèle, valorise et développe les talents du continent.
-            Découvrez les candidats et soutenez votre favori.</p>
-          <div class="cta"><router-link to="/talents" class="btn gold lg">Voter maintenant</router-link><router-link
+          <p class="lead">La plateforme où vous êtes impactés pour impacter.
+            <br> Découvrez les candidats et soutenez votre favori.</p>
+          <div class="cta"><router-link to="/candidats" class="btn gold lg">Voter maintenant</router-link><router-link
               to="/a-propos" class="btn lg">Découvrir African Talents</router-link></div>
-          <Countdown v-if="competition.status === 'open'" :target="competition.endsAt" />
+          <Countdown v-if="competition.ticketSalesOpen" :target="competition.endsAt" label="Fin de la vente dans" />
         </div>
         <div class="hero-logo"><img src="/logo.jpg"
             alt="African Talents, la plate-forme où vous êtes impactés pour impacter" fetchpriority="high" /></div>
@@ -66,7 +68,7 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
           <p>{{ cats.length }} catégorie{{ cats.length === 1 ? '' : 's' }} · Choisissez et soutenez vos nominés.</p>
         </div>
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))"><router-link
-            v-for="c in cats" :key="c.id" :to="{ path: '/talents', query: { cat: c.id } }" class="card cat"
+            v-for="c in cats" :key="c.id" :to="{ path: '/candidats', query: { cat: c.id } }" class="card cat"
             :style="{ backgroundImage: `url(${c.img})` }" v-reveal><span>{{ c.label }}</span></router-link></div>
       </div>
     </section>
@@ -101,13 +103,24 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
           <h2><span>Notre</span> équipe</h2>
           <p>Les femmes et les hommes qui portent la vision African Talents.</p>
         </div>
-        <div class="team-grid">
-          <article v-for="member in teamMembers" :key="member.id" class="team-card" v-reveal><img :src="member.image"
-              :alt="`${member.name}, ${member.role}`" loading="lazy" />
-            <div>
-              <h3>{{ member.name }}</h3><span>{{ member.role }}</span>
-            </div>
-          </article>
+        <div v-if="teamMembers.length" class="team-org-chart" aria-label="Organigramme de l’équipe African Talents">
+          <div class="team-level team-leadership" aria-label="Direction">
+            <article v-for="member in teamLeadership" :key="member.id" class="team-card team-leader" v-reveal>
+              <img :src="member.image" :alt="`${member.name}, ${member.role}`" loading="lazy" />
+              <div>
+                <h3>{{ member.name }}</h3><span>{{ member.role }}</span>
+              </div>
+            </article>
+          </div>
+          <div v-if="teamSecondLevel.length" class="team-level team-members" aria-label="Équipe">
+            <article v-for="member in teamSecondLevel" :key="member.id" class="team-card" v-reveal>
+              <span class="team-level-label">Équipe</span>
+              <img :src="member.image" :alt="`${member.name}, ${member.role}`" loading="lazy" />
+              <div>
+                <h3>{{ member.name }}</h3><span>{{ member.role }}</span>
+              </div>
+            </article>
+          </div>
         </div>
       </div>
     </section>
@@ -148,6 +161,111 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
     </a>
   </div>
 </template>
+
+<style scoped>
+.team-org-chart {
+  --org-line: rgb(231 181 42 / 55%);
+  display: grid;
+  gap: 3.5rem;
+  max-width: 1050px;
+  margin: 0 auto;
+}
+
+.team-level {
+  position: relative;
+  display: grid;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+.team-leadership {
+  grid-template-columns: repeat(2, minmax(0, 230px));
+}
+
+.team-leadership::after {
+  position: absolute;
+  right: 25%;
+  bottom: -1.8rem;
+  left: 25%;
+  border-bottom: 1px solid var(--org-line);
+  content: '';
+}
+
+.team-leadership::before {
+  position: absolute;
+  bottom: -1.8rem;
+  left: 50%;
+  height: 1.8rem;
+  border-left: 1px solid var(--org-line);
+  content: '';
+}
+
+.team-members {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.team-members::before {
+  position: absolute;
+  top: -1.8rem;
+  left: 50%;
+  height: 1.8rem;
+  border-left: 1px solid var(--org-line);
+  content: '';
+}
+
+.team-card {
+  position: relative;
+}
+
+.team-leader {
+  border-color: rgb(231 181 42 / 65%);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 22%);
+}
+
+.team-level-label {
+  position: absolute;
+  z-index: 1;
+  top: .7rem;
+  left: .7rem;
+  padding: .35rem .65rem;
+  border: 1px solid rgb(231 181 42 / 55%);
+  border-radius: 999px;
+  color: #07153a;
+  background: #f6e08a;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 560px) {
+  .team-org-chart {
+    gap: 2.5rem;
+  }
+
+  .team-leadership {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .team-members {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .team-leadership::after {
+    right: 25%;
+    left: 25%;
+  }
+
+  .team-level-label {
+    top: .4rem;
+    left: .4rem;
+    padding: .25rem .45rem;
+    font-size: .55rem;
+  }
+}
+</style>
 
 <style scoped>
 .scene-programs {
@@ -309,11 +427,29 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
   color: #fff;
   box-shadow: 0 5px 18px rgb(0 0 0 / 25%);
   transition: background-color 160ms ease, transform 160ms ease;
+  animation: whatsapp-heartbeat 2.6s ease-in-out infinite;
+}
+
+.whatsapp-float::before,
+.whatsapp-float::after {
+  position: absolute;
+  z-index: -1;
+  inset: -2px;
+  border: 2px solid rgb(32 198 107 / 70%);
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+  animation: whatsapp-wave 2.6s ease-out infinite;
+}
+
+.whatsapp-float::after {
+  animation-delay: 1.3s;
 }
 
 .whatsapp-float:hover {
   background: #16a958;
   transform: translateY(-2px);
+  animation-play-state: paused;
 }
 
 .whatsapp-float:focus-visible {
@@ -322,8 +458,28 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
 }
 
 .whatsapp-float svg {
+  position: relative;
+  z-index: 1;
   width: 1.8rem;
   height: 1.8rem;
   fill: currentColor;
+}
+
+@keyframes whatsapp-heartbeat {
+  0%, 82%, 100% { transform: scale(1); }
+  87% { transform: scale(1.1); }
+  91% { transform: scale(1); }
+  95% { transform: scale(1.06); }
+}
+
+@keyframes whatsapp-wave {
+  0% { transform: scale(.95); opacity: .75; }
+  75%, 100% { transform: scale(1.85); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-float,
+  .whatsapp-float::before,
+  .whatsapp-float::after { animation: none; }
 }
 </style>

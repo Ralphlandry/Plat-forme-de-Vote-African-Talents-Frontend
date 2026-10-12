@@ -5,30 +5,35 @@ import { voteService } from '../services'
 
 const state = ref('form'), msg = ref('')
 const votePackages = ref([])
+const paymentMethods = ref([])
 const selectedPackageId = ref('')
-const paymentMethod = ref('ORANGE')
+const paymentMethod = ref('')
 const phone = ref('')
 const accepted = ref(false)
 const currentOrderNumber = ref('')
 const packagesLoading = ref(false)
-const paymentMethods = [{ id: 'ORANGE', name: 'Orange Money', icon: 'OM' }, { id: 'MTN', name: 'MTN Mobile Money', icon: 'MTN' }]
 const selectedPackage = computed(() => votePackages.value.find(item => item.id === selectedPackageId.value))
 const total = computed(() => selectedPackage.value?.price_xaf || 0)
-const selectedPayment = computed(() => paymentMethods.find(method => method.id === paymentMethod.value))
+const selectedPayment = computed(() => paymentMethods.value.find(method => method.id === paymentMethod.value))
 const phoneValid = computed(() => /^[6-9]\d{8}$/.test(phone.value))
-const canSubmit = computed(() => accepted.value && phoneValid.value && !!selectedPackage.value && !packagesLoading.value)
+const canSubmit = computed(() => accepted.value && (paymentMethod.value === 'CARD' || phoneValid.value) && !!selectedPackage.value && !!selectedPayment.value && !packagesLoading.value)
 watch(voteTarget, async candidate => {
   state.value = 'form'
   msg.value = ''
   currentOrderNumber.value = ''
   selectedPackageId.value = ''
-  paymentMethod.value = 'ORANGE'
+  paymentMethod.value = ''
   phone.value = ''
   accepted.value = false
   if (!candidate) return
   packagesLoading.value = true
   try {
-    votePackages.value = await voteService.getPackages()
+    const [packages, methods] = await Promise.all([
+      voteService.getPackages(),
+      voteService.getPaymentMethods(),
+    ])
+    votePackages.value = packages
+    paymentMethods.value = methods
     selectedPackageId.value = votePackages.value[0]?.id || ''
     if (!votePackages.value.length) {
       state.value = 'error'
@@ -61,7 +66,9 @@ async function pollPayment(orderNumber, attempt = 0) {
     }
     if (attempt >= 40) {
       state.value = 'pending'
-      msg.value = `Paiement toujours en attente. Référence : ${orderNumber}. Validez la demande sur votre téléphone.`
+      msg.value = paymentMethod.value === 'CARD'
+        ? `Confirmation carte toujours en attente. Référence : ${orderNumber}. Vous pouvez vérifier à nouveau dans quelques instants.`
+        : `Paiement toujours en attente. Référence : ${orderNumber}. Validez la demande sur votre téléphone.`
       return
     }
     window.setTimeout(() => pollPayment(orderNumber, attempt + 1), 3000)
@@ -73,7 +80,9 @@ async function pollPayment(orderNumber, attempt = 0) {
 
 async function submit() {
   if (!canSubmit.value) {
-    msg.value = 'Choisissez un forfait, entrez un numéro camerounais valide et acceptez les conditions.'
+    msg.value = paymentMethod.value === 'CARD'
+      ? 'Choisissez un forfait et acceptez les conditions.'
+      : 'Choisissez un forfait, entrez un numéro camerounais valide et acceptez les conditions.'
     return
   }
   state.value = 'loading'
@@ -82,10 +91,14 @@ async function submit() {
     const order = await voteService.createOrder({
       candidateSlug: voteTarget.value.slug,
       packageId: selectedPackage.value.id,
-      phone: `+237${phone.value}`,
+      phone: paymentMethod.value === 'CARD' ? '' : `+237${phone.value}`,
       operator: paymentMethod.value,
     })
     currentOrderNumber.value = order.order_number
+    if (paymentMethod.value === 'CARD' && order.checkout_url) {
+      window.location.assign(order.checkout_url)
+      return
+    }
     if (order.status === 'PAID') {
       const nextCandidate = await voteService.getCandidate(voteTarget.value.slug)
       voteTarget.value.votes = nextCandidate.votes
@@ -128,41 +141,56 @@ function resumePaymentCheck() {
           <h3>Moyen de paiement :</h3>
           <div class="payment-options"><button v-for="method in paymentMethods" :key="method.id" type="button"
               class="payment-option" :class="{ selected: paymentMethod === method.id }"
-              @click="paymentMethod = method.id"><i>{{ method.icon }}</i><strong>{{ method.name }}</strong></button>
+              @click="paymentMethod = method.id"><img v-if="method.id === 'CARD'" class="card-payment-logo"
+                src="/visa-and-mastercard-logo-26.png" alt="Visa et Mastercard" /><i v-else>{{ method.icon }}</i><strong>{{ method.name }}</strong></button>
           </div>
         </section>
-        <div class="payment-instructions"><strong>{{ selectedPayment.name }} (Cameroun)</strong>
-          <p>1. Entrez votre numéro {{ selectedPayment.name === 'MTN Mobile Money' ? 'MTN MoMo' : 'Orange Money' }}.</p>
-          <p>2. Confirmez la demande de paiement reçue sur votre téléphone.</p>
-          <p>3. Les votes seront ajoutés après validation serveur du paiement.</p>
-        </div>
-        <div class="payment-field"><label :for="`phone-${paymentMethod}`">Votre numéro {{ selectedPayment.name }}</label>
-          <div class="phone-input"><span>+237</span><input :id="`phone-${paymentMethod}`" :value="phone"
-              inputmode="numeric" placeholder="6XX XX XX XX" maxlength="9"
-              @input="phone = normalizePhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
-        </div>
-        <label class="consent"><input v-model="accepted" type="checkbox" /><span>J'accepte les <b>conditions d'utilisation</b> et l'utilisation de mon numéro pour le suivi des votes <b>(confidentialité)</b>.</span></label>
-        <p v-if="msg && state === 'form'" class="vote-error">{{ msg }}</p><button class="btn gold vote-submit" type="button"
-          :disabled="!canSubmit || state !== 'form'" @click="submit">{{ state === 'loading' ? 'Traitement…' : `Confirmer et payer ${formatAmount(total)}` }}</button>
-        <p class="vote-note">Vos votes seront ajoutés après validation du paiement par l’API.</p>
+        <Transition name="payment-reveal">
+          <div v-if="paymentMethod && selectedPayment" class="payment-details">
+            <div class="payment-instructions"><strong v-if="paymentMethod === 'CARD'">Paiement sécurisé par carte</strong><strong v-else>{{ selectedPayment.name }} (Cameroun)</strong>
+              <template v-if="paymentMethod === 'CARD'">
+                <p>Vous serez redirigé vers la page sécurisée E‑NKAP pour payer avec votre carte Visa ou Mastercard.</p>
+                  <p>Les données de votre carte ne transitent jamais par African Talents.</p>
+              </template>
+              <template v-else>
+                <p>1. Entrez votre numéro {{ selectedPayment.name === 'MTN Mobile Money' ? 'MTN MoMo' : 'Orange Money' }}.</p>
+                <p>2. Confirmez la demande de paiement reçue sur votre téléphone.</p>
+                <p>3. Les votes seront ajoutés après validation serveur du paiement.</p>
+              </template>
+            </div>
+            <div v-if="paymentMethod !== 'CARD'" class="payment-field"><label :for="`phone-${paymentMethod}`">Votre numéro {{ selectedPayment.name }}</label>
+              <div class="phone-input"><span>+237</span><input :id="`phone-${paymentMethod}`" :value="phone"
+                  inputmode="numeric" placeholder="6XX XX XX XX" maxlength="9"
+                  @input="phone = normalizePhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
+            </div>
+            <label class="consent"><input v-model="accepted" type="checkbox" /><span>J'accepte les <b>conditions d'utilisation</b> et le traitement des informations nécessaires au suivi du paiement <b>(confidentialité)</b>.</span></label>
+            <p v-if="msg && state === 'form'" class="vote-error">{{ msg }}</p><button class="btn gold vote-submit" type="button"
+              :disabled="!canSubmit || state !== 'form'" @click="submit">{{ state === 'loading' ? 'Traitement…' : `Confirmer et payer ${formatAmount(total)}` }}</button>
+            <p class="vote-note">Vos votes seront ajoutés après validation du paiement par l’API.</p>
+          </div>
+        </Transition>
         <div v-if="state === 'loading' || state === 'pending'" class="payment-wait-overlay">
           <section class="payment-wait-card" role="status" aria-live="polite">
             <div class="spin payment-wait-spinner"></div>
-            <h3>Validez sur votre téléphone {{ paymentMethod === 'ORANGE' ? 'Orange' : 'MTN' }}</h3>
-            <p v-if="paymentMethod === 'ORANGE'" class="payment-wait-intro">Composez #150*50# sur votre téléphone Orange, puis validez avec votre code secret Orange Money.</p>
-            <p v-else class="payment-wait-intro">Demande MTN envoyée. Validez le menu USSD Push sur votre téléphone avec votre code secret MTN.</p>
-            <ol v-if="paymentMethod === 'ORANGE'" class="payment-wait-steps">
-              <li>Composez #150*50# sur votre téléphone Orange</li>
-              <li>Saisissez votre code secret Orange Money pour confirmer</li>
-              <li>Gardez cette page ouverte jusqu’à la confirmation</li>
-            </ol>
-            <ol v-else class="payment-wait-steps">
-              <li>Déverrouillez votre téléphone</li>
-              <li>Acceptez le menu USSD Push qui s’affiche</li>
-              <li>Confirmez avec votre code secret MTN</li>
-            </ol>
+            <h3 v-if="paymentMethod === 'CARD'">Vérification de votre paiement par carte</h3>
+            <h3 v-else>Validez sur votre téléphone {{ paymentMethod === 'ORANGE' ? 'Orange' : 'MTN' }}</h3>
+            <p v-if="paymentMethod === 'CARD'" class="payment-wait-intro">La confirmation est en cours. Vos votes ne seront ajoutés qu’après vérification du paiement.</p>
+            <template v-else>
+              <p v-if="paymentMethod === 'ORANGE'" class="payment-wait-intro">Composez #150*50# sur votre téléphone Orange, puis validez avec votre code secret Orange Money.</p>
+              <p v-else class="payment-wait-intro">Demande MTN envoyée. Validez le menu USSD Push sur votre téléphone avec votre code secret MTN.</p>
+              <ol v-if="paymentMethod === 'ORANGE'" class="payment-wait-steps">
+                <li>Composez #150*50# sur votre téléphone Orange</li>
+                <li>Saisissez votre code secret Orange Money pour confirmer</li>
+                <li>Gardez cette page ouverte jusqu’à la confirmation</li>
+              </ol>
+              <ol v-else class="payment-wait-steps">
+                <li>Déverrouillez votre téléphone</li>
+                <li>Acceptez le menu USSD Push qui s’affiche</li>
+                <li>Confirmez avec votre code secret MTN</li>
+              </ol>
+            </template>
             <p v-if="state === 'pending' && msg" class="payment-wait-status">{{ msg }}</p>
-            <p class="payment-wait-note">Gardez cette page ouverte le temps de valider sur votre téléphone.</p>
+            <p class="payment-wait-note">{{ paymentMethod === 'CARD' ? 'Gardez cette page ouverte pendant la vérification.' : 'Gardez cette page ouverte le temps de valider sur votre téléphone.' }}</p>
             <div v-if="state === 'pending'" class="payment-wait-actions">
               <button class="btn gold" type="button" @click="resumePaymentCheck">Vérifier à nouveau</button>
               <button class="btn" type="button" @click="close">Fermer</button>

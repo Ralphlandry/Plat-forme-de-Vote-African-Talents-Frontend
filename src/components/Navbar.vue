@@ -11,9 +11,10 @@ onMounted(() => { on(); addEventListener('scroll', on, { passive: true }) }); on
       <button class="burger" @click="open = !open" :aria-expanded="open">{{ open ? '✕ Fermer' : '☰ Menu' }}</button>
       <nav class="links" :class="{ open }" @click="open = false">
         <router-link to="/">Accueil</router-link><router-link to="/a-propos">À propos</router-link>
-        <router-link to="/talents">Talents</router-link><router-link to="/classement">Classement</router-link>
+        <router-link to="/candidats">Candidats</router-link><router-link to="/classement">Classement</router-link>
+        <router-link to="/billetterie">Billetterie</router-link>
         <router-link to="/#actualites">Actualités</router-link><a href="#contact">Contact</a>
-        <router-link to="/talents" class="btn gold">Voter</router-link>
+        <router-link to="/candidats" class="btn gold">Voter</router-link>
       </nav>
     </div>
   </header>

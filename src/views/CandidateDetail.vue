@@ -25,7 +25,7 @@ watchEffect(async () => {
   <span class="candidate-glow" :class="{ visible: glow.visible }"
     :style="{ transform: `translate3d(${glow.x}px, ${glow.y}px, 0) translate(-50%, -50%)` }" aria-hidden="true"></span>
   <section class="section" style="padding-top:1rem"><div class="wrap">
-  <router-link to="/talents" style="color:var(--gold-l)">← Tous les talents</router-link>
+  <router-link to="/candidats" style="color:var(--gold-l)">← Tous les candidats</router-link>
   <div v-if="err" class="state">{{ err }}</div><div v-else-if="!c" class="state"><div class="spin"></div></div>
   <div v-else class="detail" style="margin-top:1.5rem">
     <div class="big"><Avatar :c="c" /></div>
@@ -33,7 +33,7 @@ watchEffect(async () => {
       <h1 class="gold-text" style="margin:.8rem 0;font-size:clamp(2.3rem,5vw,3.6rem)">{{ c.name }}</h1>
       <p style="color:var(--mut)">{{ c.bio }}</p>
       <div class="facts"><div><b class="gold-text">{{ c.votes.toLocaleString('fr-FR') }}</b>votes</div><div><b class="gold-text">#{{ rank }}</b>classement</div></div>
-      <div class="detail-actions"><button class="btn gold lg" :disabled="competition.status !== 'open'" @click="openVote(c)">{{ competition.status === 'open' ? 'Voter pour ce talent' : statusLabel[competition.status] }}</button><button class="btn lg" type="button" @click="openShare(c)">Partager</button></div>
+      <div class="detail-actions"><button class="btn gold lg" :disabled="competition.status !== 'open'" @click="openVote(c)">{{ competition.status === 'open' ? 'Voter pour ce talent' : statusLabel[competition.status] }}</button><router-link class="btn lg" :to="{ path: '/billetterie', query: { promo: c.code } }">Vendre des billets · 1 point par vente</router-link><button class="btn lg" type="button" @click="openShare(c)">Partager</button></div>
       <Countdown v-if="competition.status === 'open'" :target="competition.endsAt" />
       <div class="gal"><img v-for="g in c.gallery" :key="g" :src="g" :alt="`Galerie de ${c.name}`" loading="lazy" /></div></div></div>
 </div></section></div></template>

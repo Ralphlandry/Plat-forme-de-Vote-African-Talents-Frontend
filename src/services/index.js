@@ -2,6 +2,12 @@ import { categories as fallbackCategories } from '../data/categories.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009/api/v1'
 
+function formatApiErrors(errors) {
+  if (Array.isArray(errors)) return errors.map(formatApiErrors).filter(Boolean).join(' ')
+  if (errors && typeof errors === 'object') return Object.values(errors).map(formatApiErrors).filter(Boolean).join(' ')
+  return typeof errors === 'string' ? errors : ''
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -14,7 +20,7 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(body.message || `Erreur API (${response.status})`)
+    throw new Error(formatApiErrors(body.errors) || body.message || `Erreur API (${response.status})`)
   }
 
   if (response.status === 204) return null
@@ -85,15 +91,17 @@ function mapNews(article) {
 export const competitionService = {
   async getStatus() {
     const current = await request('/public/competition/')
-    if (!current) return { status: 'upcoming', endsAt: 0, votePrice: 0, currency: 'FCFA' }
+    if (!current) return { status: 'upcoming', endsAt: 0, votePrice: 0, currency: 'FCFA', ticketSalesOpen: false }
     let status = 'closed'
     if (current.status === 'ENDED') status = 'ended'
     else if (current.status === 'SCHEDULED' || current.status === 'DRAFT') status = 'upcoming'
     else if (current.votes_open) status = 'open'
     return {
       id: current.id,
+      startDate: current.start_date,
       status,
       endsAt: current.end_date ? new Date(current.end_date).getTime() : 0,
+      ticketSalesOpen: current.ticket_sales_open === true,
       votePrice: 0,
       currency: 'FCFA',
       phases: current.phases || [],
@@ -154,13 +162,18 @@ export const voteService = {
   async getPackages() {
     return getList('/public/vote-packages/')
   },
+  async getPaymentMethods() {
+    const response = await request('/public/payment-methods/')
+    if (!Array.isArray(response.methods)) throw new Error('Les moyens de paiement reçus sont invalides.')
+    return response.methods
+  },
   async createOrder({ candidateSlug, packageId, phone, operator }) {
     return request('/public/vote-orders/', {
       method: 'POST',
       body: JSON.stringify({
         candidate: candidateSlug,
         vote_package: packageId,
-        phone,
+        ...(phone ? { phone } : {}),
         operator,
         idempotency_key: crypto.randomUUID(),
         accept_terms: true,
@@ -169,6 +182,49 @@ export const voteService = {
   },
   async getOrderStatus(orderNumber) {
     return request(`/public/vote-orders/${encodeURIComponent(orderNumber)}/`)
+  },
+}
+
+export const ticketService = {
+  async getTypes() {
+    return getList('/public/ticket-types/')
+  },
+  async createOrder({ ticketType, firstName, lastName, phone, operator, promoCode }) {
+    return request('/public/ticket-orders/', {
+      method: 'POST',
+      body: JSON.stringify({
+        ticket_type: ticketType,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        operator,
+        promo_code: promoCode,
+        idempotency_key: crypto.randomUUID(),
+        accept_terms: true,
+      }),
+    })
+  },
+  async getOrderStatus(orderNumber) {
+    return request(`/public/ticket-orders/${encodeURIComponent(orderNumber)}/`)
+  },
+  async downloadPdf(orderNumber) {
+    const response = await fetch(
+      `${API_BASE_URL}/public/ticket-orders/${encodeURIComponent(orderNumber)}/pdf/`,
+      { credentials: 'include' },
+    )
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.message || `Le billet PDF n'a pas pu être téléchargé (${response.status}).`)
+    }
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `billet-${orderNumber}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   },
 }
 

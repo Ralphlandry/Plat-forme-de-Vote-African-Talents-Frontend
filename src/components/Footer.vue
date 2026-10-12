@@ -23,7 +23,7 @@ function submitAuditionForm() {
 }
 </script>
 <template>
-  <section v-if="!['talents', 'talent', 'news'].includes(route.name)" class="community-section" id="contact"><div class="wrap community-wrap">
+  <section v-if="!['candidates', 'candidate', 'news', 'ticketing'].includes(route.name)" class="community-section" id="contact"><div class="wrap community-wrap">
     <div class="community-title"><span class="community-eyebrow">Communauté</span><h2>Rejoignez<br />la communauté</h2><p>Suivez African Talents sur les réseaux et ne manquez aucune actualité.</p></div>
     <div class="community-links">
       <a class="community-link" :href="contact.whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir WhatsApp"><span aria-hidden="true">◔</span>WhatsApp</a>
@@ -33,7 +33,7 @@ function submitAuditionForm() {
       <a class="community-link" :href="contact.youtube" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span>YouTube</a>
     </div>
   </div></section>
-  <section v-if="!['talents', 'talent', 'news'].includes(route.name)" class="audition-section" aria-labelledby="audition-title">
+  <section v-if="!['candidates', 'candidate', 'news', 'ticketing'].includes(route.name)" class="audition-section" aria-labelledby="audition-title">
     <div class="wrap audition-wrap">
       <div class="audition-intro">
         <span class="audition-eyebrow">Prochaine édition</span>
@@ -57,8 +57,8 @@ function submitAuditionForm() {
   <footer class="foot"><div class="wrap">
     <div class="cols">
       <div><img src="/logo.jpg" alt="African Talents" width="90" height="90" style="border-radius:50%" loading="lazy" />
-        <p style="color:var(--mut);margin-top:1rem;max-width:36ch">La plateforme panafricaine qui révèle, valorise et développe les talents du continent.</p></div>
-      <ul><li><b class="gold-text">Navigation</b></li><li><router-link to="/a-propos">À propos</router-link></li><li><router-link to="/talents">Talents</router-link></li><li><router-link to="/classement">Classement</router-link></li></ul>
+        <p style="color:var(--mut);margin-top:1rem;max-width:36ch">La plateforme où vous êtes impactés pour impacter.</p></div>
+      <ul><li><b class="gold-text">Navigation</b></li><li><router-link to="/a-propos">À propos</router-link></li><li><router-link to="/candidats">Candidats</router-link></li><li><router-link to="/classement">Classement</router-link></li><li><router-link to="/billetterie">Billetterie</router-link></li></ul>
       <ul><li><b class="gold-text">Contact</b></li><li v-for="p in contact.phones" :key="p"><a :href="'tel:' + p.replace(/ /g, '')">{{ p }}</a></li>
         <li><a :href="contact.tiktok" target="_blank" rel="noopener">TikTok</a> · <a :href="contact.facebook" target="_blank" rel="noopener">Facebook</a> · <a :href="contact.youtube" target="_blank" rel="noopener">YouTube</a></li></ul>
     </div>

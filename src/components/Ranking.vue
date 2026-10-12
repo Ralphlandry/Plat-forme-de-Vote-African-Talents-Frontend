@@ -3,16 +3,32 @@ import { computed } from 'vue'
 import Avatar from './Avatar.vue'
 const props = defineProps({ list: Array, limit: Number })
 const ranked = computed(() => (props.list || []).filter((candidate) => Number(candidate.votes) > 0))
+const totalVotes = computed(() => ranked.value.reduce((total, candidate) => total + Number(candidate.votes || 0), 0))
 const top = computed(() => [ranked.value[1], ranked.value[0], ranked.value[2]].filter(Boolean))
 const rest = computed(() => ranked.value.slice(3, props.limit))
-const medal = { 1: '1er', 2: '2e', 3: '3e' }
+const voteShare = candidate => totalVotes.value ? (Number(candidate.votes) / totalVotes.value * 100).toFixed(1) : '0.0'
+const medalLabel = { 1: 'Médaille d’or', 2: 'Médaille d’argent', 3: 'Médaille de bronze' }
 </script>
 <template><div>
   <p v-if="!ranked.length" class="state">Le classement apparaîtra dès les premiers votes.</p>
   <template v-else>
-  <div class="podium"><router-link v-for="c in top" :key="c.id" :to="`/talents/${c.slug || c.id}`" class="card" :class="'p' + c.rank" v-reveal>
-    <div class="medal gold-text">{{ medal[c.rank] }}</div><Avatar :c="c" style="width:90px;height:90px;border-radius:50%;margin:.5rem auto;overflow:hidden;display:block" v-if="c.photo" /><div v-else class="av" style="background:linear-gradient(145deg,#1a3f94,#0b1f52)">{{ c.name[0] }}</div>
-    <h3>{{ c.name }}</h3><span class="chip">{{ c.categoryName || c.category }}</span><p style="margin-top:.5rem"><b class="gold-text" style="font-size:1.4rem">{{ c.votes.toLocaleString('fr-FR') }}</b> votes</p></router-link></div>
-  <div class="rows"><router-link v-for="c in rest" :key="c.id" :to="`/talents/${c.slug || c.id}`" class="card r"><span>{{ c.rank }}</span><span>{{ c.name }} <small style="color:var(--mut)">· {{ c.categoryName || c.category }}</small></span><b>{{ c.votes.toLocaleString('fr-FR') }}</b></router-link></div>
+  <div class="podium">
+    <router-link v-for="c in top" :key="c.id" :to="`/candidats/${c.slug || c.id}`" class="podium-place" :class="`place-${c.rank}`" v-reveal>
+      <div class="podium-photo-wrap">
+        <span v-if="c.rank === 1" class="podium-crown" aria-label="Couronne du premier">👑</span>
+        <div class="podium-photo"><Avatar :c="c" /></div>
+        <span class="podium-medal" :class="`medal-${c.rank}`" :aria-label="medalLabel[c.rank]">{{ c.rank }}</span>
+      </div>
+      <h3>{{ c.name }}</h3>
+      <span class="podium-category">{{ c.categoryName || c.category }}</span>
+      <strong class="podium-votes">{{ Number(c.votes).toLocaleString('fr-FR') }}</strong>
+      <span class="podium-share">{{ voteShare(c) }}%</span>
+      <div class="podium-step" :aria-label="`${c.rank}${c.rank === 1 ? 'er' : 'e'} place`"><span>{{ c.rank }}</span></div>
+    </router-link>
+  </div>
+  <div class="rows"><router-link v-for="c in rest" :key="c.id" :to="`/candidats/${c.slug || c.id}`" class="card r">
+    <span>{{ c.rank }}</span><span>{{ c.name }} <small style="color:var(--mut)">· {{ c.categoryName || c.category }}</small></span>
+    <b>{{ Number(c.votes).toLocaleString('fr-FR') }} votes</b><span class="ranking-share">{{ voteShare(c) }}%</span>
+  </router-link></div>
   </template>
 </div></template>
