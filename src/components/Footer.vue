@@ -6,6 +6,7 @@ import { contact } from '../data/content'
 
 const route = useRoute()
 const auditionForm = ref({ name: '', phone: '', email: '', location: '', category: '', presentation: '', consent: false })
+const hideEngagementSections = ['candidates', 'candidate', 'news', 'ticketing', 'paymentReturn'].includes(route.name)
 
 function submitAuditionForm() {
   const { name, phone, email, location, category, presentation } = auditionForm.value
@@ -23,7 +24,7 @@ function submitAuditionForm() {
 }
 </script>
 <template>
-  <section v-if="!['candidates', 'candidate', 'news', 'ticketing'].includes(route.name)" class="community-section" id="contact"><div class="wrap community-wrap">
+  <section v-if="!hideEngagementSections" class="community-section" id="contact"><div class="wrap community-wrap">
     <div class="community-title"><span class="community-eyebrow">Communauté</span><h2>Rejoignez<br />la communauté</h2><p>Suivez African Talents sur les réseaux et ne manquez aucune actualité.</p></div>
     <div class="community-links">
       <a class="community-link" :href="contact.whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir WhatsApp"><span aria-hidden="true">◔</span>WhatsApp</a>
@@ -33,7 +34,7 @@ function submitAuditionForm() {
       <a class="community-link" :href="contact.youtube" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span>YouTube</a>
     </div>
   </div></section>
-  <section v-if="!['candidates', 'candidate', 'news', 'ticketing'].includes(route.name)" class="audition-section" aria-labelledby="audition-title">
+  <section v-if="!hideEngagementSections" class="audition-section" aria-labelledby="audition-title">
     <div class="wrap audition-wrap">
       <div class="audition-intro">
         <span class="audition-eyebrow">Prochaine édition</span>
