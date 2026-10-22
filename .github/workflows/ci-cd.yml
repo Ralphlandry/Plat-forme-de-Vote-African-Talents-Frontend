@@ -65,6 +65,6 @@ jobs:
             --exclude='dist/' \
             --exclude='.env' \
             --exclude='.env.*' \
-            -e "ssh $ssh_args" ./ "$VPS_USER@$VPS_HOST:/opt/african-talents/site/"
+            -e "ssh $ssh_args" ./ "$VPS_USER@$VPS_HOST:/home/socoprocaap/web/apps/site/"
           ssh $ssh_args "$VPS_USER@$VPS_HOST" \
-            'set -eu; test -f /opt/african-talents/site/.env; cd /opt/african-talents/site; docker compose -f docker-compose.deploy.yml up -d --build --remove-orphans --wait --wait-timeout 120'
+            'set -eu; test -f /home/socoprocaap/web/apps/site/.env; cd /home/socoprocaap/web/apps/site; docker compose -f docker-compose.deploy.yml up -d --build --remove-orphans --wait --wait-timeout 120'
