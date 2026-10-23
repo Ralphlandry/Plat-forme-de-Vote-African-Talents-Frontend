@@ -41,8 +41,8 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
           <h1 class="gold-text" style="margin-top:1rem">African Talents</h1>
           <h2 style="font-size:clamp(1.4rem,3vw,2.1rem);font-weight:600">La plate-forme où vous êtes impactés pour
             impacter</h2>
-          <p class="lead">La plateforme où vous êtes impactés pour impacter.
-            <br> Découvrez les candidats et soutenez votre favori.</p>
+          <p class="lead">Découvrez le concours African Talents, les candidats et leurs parcours.
+            <br> Soutenez votre talent favori et suivez les événements.</p>
           <div class="cta"><router-link to="/candidats" class="btn gold lg">Voter maintenant</router-link><router-link
               to="/a-propos" class="btn lg">Découvrir African Talents</router-link></div>
           <Countdown v-if="nextPhaseTarget" :target="nextPhaseTarget" label="La prochaine étape est dans" />

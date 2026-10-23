@@ -4,6 +4,7 @@ import Avatar from '../components/Avatar.vue'
 import Countdown from '../components/Countdown.vue'
 import { candidateService, rankingService } from '../services'
 import { competition, openShare, openVote, statusLabel } from '../composables/useCompetition'
+import { setPageSeo } from '../utils/seo'
 const props = defineProps({ id: String })
 const c = ref(null), rank = ref(null), err = ref('')
 const glow = ref({ x: 0, y: 0, visible: false })
@@ -17,8 +18,25 @@ function hideGlow() {
 }
 watchEffect(async () => {
   c.value = null; err.value = ''
-  try { c.value = await candidateService.getCandidate(props.id); rank.value = c.value.rank ?? (await rankingService.getRanking()).find(x => x.slug === props.id)?.rank; document.title = `${c.value.name} · African Talents` }
-  catch (e) { err.value = e.message }
+  try {
+    c.value = await candidateService.getCandidate(props.id)
+    rank.value = c.value.rank ?? (await rankingService.getRanking()).find(x => x.slug === props.id)?.rank
+    setPageSeo({
+      title: `${c.value.name} | Candidat African Talents`,
+      description: c.value.bio || `Découvrez le profil de ${c.value.name}, candidat${c.value.categoryName ? ` en ${c.value.categoryName}` : ''} à African Talents, et soutenez son parcours.`,
+      path: `/candidats/${encodeURIComponent(props.id)}`,
+      image: c.value.photo || undefined,
+    })
+  }
+  catch (e) {
+    err.value = e.message
+    setPageSeo({
+      title: `Profil candidat introuvable | African Talents`,
+      description: 'Ce profil de candidat African Talents est introuvable.',
+      path: `/candidats/${encodeURIComponent(props.id)}`,
+      robots: 'noindex, nofollow',
+    })
+  }
 })
 </script>
 <template><div class="page-top candidate-detail-page" @pointermove="updateGlow" @pointerleave="hideGlow">

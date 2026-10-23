@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { contentService } from '../services'
+import { setPageSeo } from '../utils/seo'
 
 const props = defineProps({ id: String })
 const router = useRouter()
@@ -13,9 +14,21 @@ watch(() => props.id, async id => {
   error.value = ''
   try {
     article.value = await contentService.getNewsItem(id)
+    setPageSeo({
+      title: `${article.value.title} | Actualités African Talents`,
+      description: article.value.excerpt || `Découvrez cette actualité d’African Talents : ${article.value.title}.`,
+      path: `/actualites/${encodeURIComponent(id)}`,
+      image: article.value.img || undefined,
+      type: 'article',
+    })
   } catch (cause) {
     article.value = null
     error.value = cause.message
+    setPageSeo({
+      title: `Actualité introuvable | African Talents`,
+      description: 'Cette actualité African Talents est introuvable.',
+      robots: 'noindex, nofollow',
+    })
   } finally {
     loading.value = false
   }
