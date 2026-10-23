@@ -9,16 +9,38 @@ import { contact, gallerySlides } from '../data/content'
 const ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([]), partners = ref([])
 const teamLeadership = computed(() => teamMembers.value.slice(0, 2))
 const teamSecondLevel = computed(() => teamMembers.value.slice(2))
-const nextPhaseTarget = computed(() => {
+const phaseCountdown = computed(() => {
   const now = Date.now()
-  return (competition.value.phases || [])
-    .map(phase => {
-      if (!phase.start_date) return 0
-      const [year, month, day] = phase.start_date.split('-').map(Number)
-      return year && month && day ? new Date(year, month - 1, day).getTime() : 0
-    })
-    .filter(target => target > now)
-    .sort((a, b) => a - b)[0] || 0
+  const parseDate = (value, endOfDay = false) => {
+    if (!value) return 0
+    const [year, month, day] = value.split('-').map(Number)
+    if (!year || !month || !day) return 0
+    return endOfDay
+      ? new Date(year, month - 1, day, 23, 59, 59, 999).getTime()
+      : new Date(year, month - 1, day).getTime()
+  }
+  const phases = competition.value.phases || []
+  const activePhase = phases
+    .filter(phase => phase.status === 'active')
+    .map(phase => ({ phase, target: parseDate(phase.end_date, true) }))
+    .filter(item => item.target > now)
+    .sort((a, b) => a.target - b.target)[0]
+
+  if (activePhase) {
+    return {
+      target: activePhase.target,
+      label: `La phase ${activePhase.phase.name} se termine dans`,
+    }
+  }
+
+  const upcomingPhase = phases
+    .map(phase => ({ phase, target: parseDate(phase.start_date) }))
+    .filter(item => item.target > now)
+    .sort((a, b) => a.target - b.target)[0]
+
+  return upcomingPhase
+    ? { target: upcomingPhase.target, label: `La phase ${upcomingPhase.phase.name} commence dans` }
+    : null
 })
 const showWhatsapp = ref(false)
 const updateWhatsappVisibility = () => { showWhatsapp.value = window.scrollY > 250 }
@@ -45,7 +67,7 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
             <br> Soutenez votre talent favori et suivez les événements.</p>
           <div class="cta"><router-link to="/candidats" class="btn gold lg">Voter maintenant</router-link><router-link
               to="/a-propos" class="btn lg">Découvrir African Talents</router-link></div>
-          <Countdown v-if="nextPhaseTarget" :target="nextPhaseTarget" label="La prochaine étape est dans" />
+          <Countdown v-if="phaseCountdown" :target="phaseCountdown.target" :label="phaseCountdown.label" />
         </div>
         <div class="hero-logo"><img src="/logo.jpg"
             alt="African Talents, la plate-forme où vous êtes impactés pour impacter" fetchpriority="high" /></div>
