@@ -33,15 +33,25 @@ const eventDateLabel = computed(() => {
 })
 
 const ticketBenefits = {
-  CLASSIC: [
+  BASIC: [
     'Accès à la salle',
-    'Une entrée nominative',
   ],
-  VIP: [
-    'Accès aux premières places',
+  STANDARD: [
+    'Accès à la salle',
     'Une boisson incluse',
-    'Photos avec les Stars',
   ],
+  PREMIUM: [
+    'Accès à la salle',
+    'Une boisson incluse',
+    'Accès aux premières places',
+    'Photo avec les stars',
+  ],
+}
+
+const ticketPackageNames = {
+  BASIC: 'Pass Basic',
+  STANDARD: 'Pass Standard',
+  PREMIUM: 'Pass Premium',
 }
 
 const paymentMethods = [
@@ -92,7 +102,10 @@ async function loadTickets() {
       ticketService.getTypes(),
       competitionService.getStatus(),
     ])
-    ticketTypes.value = types
+    const ticketOrder = { BASIC: 0, STANDARD: 1, PREMIUM: 2 }
+    ticketTypes.value = [...types].sort(
+      (first, second) => ticketOrder[first.ticket_class] - ticketOrder[second.ticket_class],
+    )
     ticketSalesOpen.value = competition.ticketSalesOpen
     competitionStartDate.value = competition.startDate || types[0]?.competition_start_date || ''
   } catch (err) {
@@ -231,16 +244,18 @@ loadTickets()
                   :key="ticket.id"
                   class="package-card"
                   :class="[
-                    ticket.ticket_class === 'VIP' ? 'package-vip' : 'package-classic',
+                    ticket.ticket_class === 'PREMIUM' ? 'package-vip' : ticket.ticket_class === 'BASIC' ? 'package-basic' : 'package-classic',
                     { 'package-selected': selectedType === String(ticket.id) },
                   ]"
                 >
                   <div class="package-card-top">
-                    <span class="package-kicker">{{ ticket.ticket_class === 'VIP' ? 'EXPÉRIENCE PRIVILÈGE' : 'ACCÈS À LA FINALE' }}</span>
-                    <span v-if="ticket.ticket_class === 'VIP'" class="package-star" aria-hidden="true">✦</span>
-                    <h3>{{ ticket.ticket_class === 'VIP' ? 'Pass VIP' : 'Pass Classique' }}</h3>
+                    <span class="package-kicker">
+                      {{ ticket.ticket_class === 'PREMIUM' ? 'EXPÉRIENCE PRIVILÈGE' : ticket.ticket_class === 'BASIC' ? 'ACCÈS À LA SALLE' : 'ACCÈS À LA FINALE' }}
+                    </span>
+                    <span v-if="ticket.ticket_class === 'PREMIUM'" class="package-star" aria-hidden="true">✦</span>
+                    <h3>{{ ticketPackageNames[ticket.ticket_class] || ticket.label }}</h3>
                     <p class="package-description">
-                      {{ ticket.ticket_class === 'VIP' ? 'Vivez la finale au plus près de la scène.' : 'Prenez part à la grande finale.' }}
+                      {{ ticket.ticket_class === 'PREMIUM' ? 'Vivez la finale au plus près de la scène.' : ticket.ticket_class === 'BASIC' ? 'Un billet pour accéder à la salle.' : 'Prenez part à la grande finale.' }}
                     </p>
                     <p class="package-price">
                       <strong>{{ Number(ticket.price_xaf).toLocaleString('fr-FR') }}</strong>
@@ -378,7 +393,7 @@ loadTickets()
 .section-heading h2 { margin: .35rem 0 0; font-size: clamp(1.2rem, 3vw, 1.6rem); }
 .step-label { color: var(--gold-l); font-size: .7rem; font-weight: 800; letter-spacing: .15em; }
 .package-count { color: var(--mut); font-size: .85rem; }
-.package-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; align-items: stretch; }
+.package-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; align-items: stretch; }
 .package-card { position: relative; display: flex; min-height: 390px; flex-direction: column; overflow: hidden; padding: 1.5rem; border: 1px solid rgb(255 255 255 / 16%); border-radius: 1rem; background: linear-gradient(150deg, #28284f, #171a35 75%); transition: border-color .2s, transform .2s, box-shadow .2s; }
 .package-card::after { position: absolute; right: -3.7rem; bottom: -4.1rem; width: 10rem; height: 10rem; border: 1px solid rgb(255 255 255 / 8%); border-radius: 50%; content: ''; pointer-events: none; }
 .package-card:hover { transform: translateY(-3px); }
@@ -386,6 +401,7 @@ loadTickets()
 .package-vip { border-color: rgb(232 185 72 / 40%); background: linear-gradient(145deg, #4d3a16, #24203b 78%); }
 .package-card-top { position: relative; min-height: 190px; padding: 1.1rem; border-radius: .75rem; color: #17182d; background: #f5f1e8; }
 .package-vip .package-card-top { background: linear-gradient(135deg, #fff3bd, #eab94d); }
+.package-basic { border-color: rgb(212 167 44 / 38%); }
 .package-kicker { display: block; color: #827046; font-size: .65rem; font-weight: 800; letter-spacing: .13em; }
 .package-card h3 { margin: 1.05rem 0 .35rem; font-size: 1.8rem; }
 .package-description { margin: 0; color: #58576a; font-size: .9rem; }
@@ -443,6 +459,7 @@ loadTickets()
 .ticket-status.failed, .ticket-status.cancelled, .ticket-status.expired, .ticket-status.refunded { color: #ffb4ab; }
 .ticket-result p { max-width: 640px; color: var(--mut); line-height: 1.7; }
 @media (max-width: 700px) {
+  .package-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .package-card { min-height: 0; padding: 1rem; }
   .package-card-top { min-height: 180px; padding: .9rem; }
   .package-price strong { font-size: 1.65rem; }
