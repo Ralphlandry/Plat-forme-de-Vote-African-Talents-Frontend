@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { voteTarget, competition } from '../composables/useCompetition'
 import { voteService } from '../services'
 
@@ -10,6 +10,7 @@ const selectedPackageId = ref('')
 const paymentMethod = ref('')
 const phone = ref('')
 const accepted = ref(false)
+const phoneInput = ref(null)
 const currentOrderNumber = ref('')
 const packagesLoading = ref(false)
 const selectedPackage = computed(() => votePackages.value.find(item => item.id === selectedPackageId.value))
@@ -49,6 +50,14 @@ watch(voteTarget, async candidate => {
 const close = () => { if (state.value !== 'loading') voteTarget.value = null }
 const formatAmount = value => `${value.toLocaleString('fr-FR')} ${competition.value.currency || 'FCFA'}`
 const normalizePhone = value => value.replace(/\D/g, '').slice(0, 9)
+
+async function selectPaymentMethod(methodId) {
+  paymentMethod.value = methodId
+  if (methodId !== 'CARD') {
+    await nextTick()
+    phoneInput.value?.focus()
+  }
+}
 
 async function pollPayment(orderNumber, attempt = 0) {
   try {
@@ -141,7 +150,7 @@ function resumePaymentCheck() {
           <h3>Moyen de paiement :</h3>
           <div class="payment-options"><button v-for="method in paymentMethods" :key="method.id" type="button"
               class="payment-option" :class="{ selected: paymentMethod === method.id }"
-              @click="paymentMethod = method.id"><img v-if="method.id === 'CARD'" class="card-payment-logo"
+              @click="selectPaymentMethod(method.id)"><img v-if="method.id === 'CARD'" class="card-payment-logo"
                 src="/visa-and-mastercard-logo-26.png" alt="Visa et Mastercard" /><i v-else>{{ method.icon }}</i><strong>{{ method.name }}</strong></button>
           </div>
         </section>
@@ -159,7 +168,7 @@ function resumePaymentCheck() {
               </template>
             </div>
             <div v-if="paymentMethod !== 'CARD'" class="payment-field"><label :for="`phone-${paymentMethod}`">Votre numéro {{ selectedPayment.name }}</label>
-              <div class="phone-input"><span>+237</span><input :id="`phone-${paymentMethod}`" :value="phone"
+              <div class="phone-input"><span>+237</span><input :id="`phone-${paymentMethod}`" ref="phoneInput" :value="phone"
                   inputmode="numeric" placeholder="6XX XX XX XX" maxlength="9"
                   @input="phone = normalizePhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
             </div>
@@ -189,6 +198,34 @@ function resumePaymentCheck() {
                 <li>Confirmez avec votre code secret MTN</li>
               </ol>
             </template>
+
+            <style scoped>
+            .consent input {
+              width: 1.5rem;
+              height: 1.5rem;
+              flex: 0 0 1.5rem;
+              margin: 0.1rem 0.25rem 0 0;
+              accent-color: var(--gold);
+            }
+
+            .consent {
+              gap: 0.75rem;
+              font-size: 0.85rem;
+            }
+
+            @media (max-width: 560px) {
+              .consent input {
+                width: 1.75rem;
+                height: 1.75rem;
+                flex-basis: 1.75rem;
+              }
+
+              .consent {
+                gap: 0.85rem;
+                font-size: 0.9rem;
+              }
+            }
+            </style>
             <p v-if="state === 'pending' && msg" class="payment-wait-status">{{ msg }}</p>
             <p class="payment-wait-note">{{ paymentMethod === 'CARD' ? 'Gardez cette page ouverte pendant la vérification.' : 'Gardez cette page ouverte le temps de valider sur votre téléphone.' }}</p>
             <div v-if="state === 'pending'" class="payment-wait-actions">

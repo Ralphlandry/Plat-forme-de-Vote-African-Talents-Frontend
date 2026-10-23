@@ -9,6 +9,7 @@ const ticketSalesOpen = ref(false)
 const selectedType = ref('')
 const purchaseModalOpen = ref(false)
 const modalCloseButton = ref(null)
+const phoneInput = ref(null)
 let lastPackageButton = null
 const firstName = ref('')
 const lastName = ref('')
@@ -84,6 +85,12 @@ function selectTicket(ticketId, event) {
 
 function closePurchaseModal() {
   purchaseModalOpen.value = false
+}
+
+async function selectPaymentMethod(method) {
+  operator.value = method
+  await nextTick()
+  phoneInput.value?.focus()
 }
 
 async function loadTickets() {
@@ -315,7 +322,7 @@ loadTickets()
                     :class="[`payment-${method.className}`, { 'payment-choice-selected': operator === method.value }]"
                     type="button"
                     :disabled="loading"
-                    @click="operator = method.value"
+                    @click="selectPaymentMethod(method.value)"
                     :aria-pressed="operator === method.value"
                   >
                     <span class="payment-brand" aria-hidden="true">{{ method.short }}</span>
@@ -325,7 +332,7 @@ loadTickets()
                 </div>
                 <label v-if="operator" class="ticket-field payment-phone">
                   Numéro {{ operator === 'MTN' ? 'MTN Mobile Money' : 'Orange Money' }}
-                  <input v-model="phone" required type="tel" inputmode="tel" pattern="\+?[0-9]{9,15}" :placeholder="operator === 'MTN' ? '+237 6XX XX XX XX' : '+237 6XX XX XX XX'" autocomplete="tel" />
+                  <input ref="phoneInput" v-model="phone" required type="tel" inputmode="tel" pattern="\+?[0-9]{9,15}" :placeholder="operator === 'MTN' ? '+237 6XX XX XX XX' : '+237 6XX XX XX XX'" autocomplete="tel" />
                 </label>
               </div>
 
@@ -434,8 +441,8 @@ loadTickets()
 .payment-copy { display: grid; flex: 1; gap: .2rem; }
 .payment-copy small { color: var(--mut); }
 .payment-arrow { color: var(--gold-l); font-size: 1.8rem; }
-.terms { display: flex; align-items: flex-start; gap: .6rem; color: var(--mut); font-size: .9rem; line-height: 1.5; }
-.terms input { margin-top: .25rem; accent-color: var(--gold-l); }
+.terms { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem; border: 1px solid rgb(212 167 44 / 35%); border-radius: .65rem; color: var(--mut); font-size: .95rem; line-height: 1.5; }
+.terms input { width: 1.5rem; height: 1.5rem; flex: 0 0 1.5rem; margin-top: .1rem; accent-color: var(--gold-l); }
 .payment-processing { margin: 0; color: var(--gold-l); }
 .ticket-security { margin: 0; color: var(--mut); font-size: .82rem; }
 .ticket-message { margin: 1rem 0; padding: 1rem; border-radius: .6rem; background: rgb(255 255 255 / 6%); }
@@ -457,6 +464,8 @@ loadTickets()
 }
 @media (max-width: 560px) {
   .package-grid, .ticket-fields, .payment-grid { grid-template-columns: 1fr; }
+  .terms { gap: .85rem; padding: .85rem; font-size: 1rem; }
+  .terms input { width: 1.75rem; height: 1.75rem; flex-basis: 1.75rem; }
   .package-card-top { min-height: 0; }
   .package-card { padding: 1rem; }
   .selected-summary { flex-wrap: wrap; }
