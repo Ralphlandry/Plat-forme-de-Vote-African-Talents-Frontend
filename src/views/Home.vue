@@ -11,7 +11,7 @@ const teamLeadership = computed(() => teamMembers.value.slice(0, 2))
 const teamSecondLevel = computed(() => teamMembers.value.slice(2))
 const finalTarget = computed(() => {
   const finalPhase = competition.value.phases?.find(phase =>
-    phase.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('finale'),
+    phase.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('final'),
   )
   if (!finalPhase?.start_date) return 0
   const [year, month, day] = finalPhase.start_date.split('-').map(Number)
