@@ -371,12 +371,24 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
   border-radius: 6px;
   background: #fff;
   text-align: center;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .partner-mark img {
   width: 100%;
   height: 112px;
   object-fit: contain;
+  transition: transform 180ms ease;
+}
+
+.partner-mark:hover {
+  transform: translateY(-5px);
+  border-color: #e7b52a;
+  box-shadow: 0 10px 24px rgb(11 31 82 / 12%);
+}
+
+.partner-mark:hover img {
+  transform: scale(1.06);
 }
 
 .partner-mark span {
@@ -459,6 +471,18 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
 .whatsapp-float:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-mark,
+  .partner-mark img {
+    transition: none;
+  }
+
+  .partner-mark:hover,
+  .partner-mark:hover img {
+    transform: none;
+  }
 }
 
 .whatsapp-float svg {
