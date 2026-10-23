@@ -9,13 +9,16 @@ import { contact, gallerySlides } from '../data/content'
 const ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([]), partners = ref([])
 const teamLeadership = computed(() => teamMembers.value.slice(0, 2))
 const teamSecondLevel = computed(() => teamMembers.value.slice(2))
-const finalTarget = computed(() => {
-  const finalPhase = competition.value.phases?.find(phase =>
-    phase.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('final'),
-  )
-  if (!finalPhase?.start_date) return 0
-  const [year, month, day] = finalPhase.start_date.split('-').map(Number)
-  return year && month && day ? new Date(year, month - 1, day).getTime() : 0
+const nextPhaseTarget = computed(() => {
+  const now = Date.now()
+  return (competition.value.phases || [])
+    .map(phase => {
+      if (!phase.start_date) return 0
+      const [year, month, day] = phase.start_date.split('-').map(Number)
+      return year && month && day ? new Date(year, month - 1, day).getTime() : 0
+    })
+    .filter(target => target > now)
+    .sort((a, b) => a - b)[0] || 0
 })
 const showWhatsapp = ref(false)
 const updateWhatsappVisibility = () => { showWhatsapp.value = window.scrollY > 250 }
@@ -42,7 +45,7 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
             <br> Découvrez les candidats et soutenez votre favori.</p>
           <div class="cta"><router-link to="/candidats" class="btn gold lg">Voter maintenant</router-link><router-link
               to="/a-propos" class="btn lg">Découvrir African Talents</router-link></div>
-          <Countdown v-if="finalTarget" :target="finalTarget" label="La finale est dans" />
+          <Countdown v-if="nextPhaseTarget" :target="nextPhaseTarget" label="La prochaine étape est dans" />
         </div>
         <div class="hero-logo"><img src="/logo.jpg"
             alt="African Talents, la plate-forme où vous êtes impactés pour impacter" fetchpriority="high" /></div>
