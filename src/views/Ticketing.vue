@@ -6,7 +6,6 @@ import { competitionService, ticketService } from '../services'
 const route = useRoute()
 const ticketTypes = ref([])
 const ticketSalesOpen = ref(false)
-const competitionStartDate = ref('')
 const selectedType = ref('')
 const purchaseModalOpen = ref(false)
 const modalCloseButton = ref(null)
@@ -25,13 +24,6 @@ let pollingTimer = null
 let refreshing = false
 const terminalStatuses = ['FAILED', 'CANCELLED', 'EXPIRED', 'REFUNDED']
 const selectedTicket = computed(() => ticketTypes.value.find(ticket => String(ticket.id) === selectedType.value))
-const eventDateLabel = computed(() => {
-  if (!competitionStartDate.value) return 'Dimanche 22 novembre'
-  const [year, month, day] = competitionStartDate.value.split('-').map(Number)
-  return new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-    .format(new Date(year, month - 1, day))
-})
-
 const ticketBenefits = {
   BASIC: [
     'Accès à la salle',
@@ -107,7 +99,6 @@ async function loadTickets() {
       (first, second) => ticketOrder[first.ticket_class] - ticketOrder[second.ticket_class],
     )
     ticketSalesOpen.value = competition.ticketSalesOpen
-    competitionStartDate.value = competition.startDate || types[0]?.competition_start_date || ''
   } catch (err) {
     error.value = err.message || 'Les billets ne sont pas disponibles pour le moment.'
   } finally {
@@ -215,7 +206,7 @@ loadTickets()
           </p>
           <div class="event-summary">
             <span class="event-summary-icon" aria-hidden="true">♫</span>
-            <span><strong>Finale du concours de chant</strong><small>{{ eventDateLabel }} · 15 h · Arena Bonamoussadi, Douala</small></span>
+            <span><strong>Finale du concours de chant</strong><small>20, 21 et 22 novembre · à partir de 15 h · Arena Bonamoussadi, Douala</small></span>
           </div>
         </header>
 
