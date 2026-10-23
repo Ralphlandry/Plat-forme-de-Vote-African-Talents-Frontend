@@ -362,7 +362,7 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
 .partner-mark {
   display: grid;
   width: min(180px, calc(50% - 0.75rem));
-  min-height: 130px;
+  min-height: 180px;
   align-content: center;
   justify-items: center;
   gap: 0.75rem;
@@ -375,7 +375,7 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
 
 .partner-mark img {
   width: 100%;
-  height: 64px;
+  height: 112px;
   object-fit: contain;
 }
 
@@ -408,8 +408,12 @@ onUnmounted(() => window.removeEventListener('scroll', updateWhatsappVisibility)
 @media (max-width: 500px) {
   .partner-mark {
     width: calc(50% - 0.65rem);
-    min-height: 112px;
+    min-height: 150px;
     padding: 0.7rem;
+  }
+
+  .partner-mark img {
+    height: 88px;
   }
 }
 
