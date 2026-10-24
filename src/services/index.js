@@ -163,7 +163,7 @@ export const contentService = {
       image: advertisement.image?.url || '',
       placement: advertisement.placement,
       displayDelaySeconds: advertisement.display_delay_seconds,
-      dismissalCooldownHours: advertisement.dismissal_cooldown_hours,
+      dismissalCooldownSeconds: advertisement.dismissal_cooldown_seconds,
       buttonLabel: advertisement.button_label,
       buttonUrl: advertisement.button_url,
     })).filter(advertisement => advertisement.image)

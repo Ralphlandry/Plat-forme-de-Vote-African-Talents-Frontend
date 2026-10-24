@@ -51,7 +51,7 @@ function scheduleNext() {
   const eligible = advertisements.value
     .filter(ad => ad.placement === 'both' || ad.placement === placement.value)
     .map(ad => {
-      const cooldownEndsAt = getDismissedAt(ad) + ad.dismissalCooldownHours * 60 * 60 * 1000
+      const cooldownEndsAt = getDismissedAt(ad) + ad.dismissalCooldownSeconds * 1000
       const firstDisplayAt = enteredAt.value + ad.displayDelaySeconds * 1000
       return { ad, displayAt: Math.max(firstDisplayAt, cooldownEndsAt) }
     })
