@@ -56,6 +56,7 @@ function mapCandidate(candidate) {
     slug: candidate.slug,
     number: number || candidate.code,
     code: candidate.code,
+    promoCode: candidate.promo_code || candidate.code,
     name,
     category: candidate.category?.slug || candidate.category,
     categoryName,

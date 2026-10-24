@@ -303,7 +303,7 @@ loadTickets()
                 <label>Prénom<input v-model="firstName" required maxlength="100" autocomplete="given-name" placeholder="Votre prénom" /></label>
                 <label>Nom<input v-model="lastName" required maxlength="100" autocomplete="family-name" placeholder="Votre nom" /></label>
               </div>
-              <label class="ticket-field">Code promo du candidat <span class="optional">(facultatif)</span><input v-model="promoCode" maxlength="32" autocomplete="off" placeholder="Ex. AT-001" /></label>
+              <label class="ticket-field">Code promo du candidat <span class="optional">(facultatif)</span><input v-model="promoCode" maxlength="32" autocomplete="off" placeholder="Ex. AMINATA2026" /></label>
               <p class="ticket-hint">Le code permet d’attribuer cette vente au candidat concerné. Il ne réduit pas le prix.</p>
 
               <div class="payment-section">

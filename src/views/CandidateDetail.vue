@@ -51,7 +51,7 @@ watchEffect(async () => {
       <h1 class="gold-text" style="margin:.8rem 0;font-size:clamp(2.3rem,5vw,3.6rem)">{{ c.name }}</h1>
       <p style="color:var(--mut)">{{ c.bio }}</p>
       <div class="facts"><div><b class="gold-text">{{ c.votes.toLocaleString('fr-FR') }}</b>votes</div><div><b class="gold-text">#{{ rank }}</b>classement</div></div>
-      <div class="detail-actions"><button class="btn gold lg" :disabled="competition.status !== 'open'" @click="openVote(c)">{{ competition.status === 'open' ? 'Voter pour ce talent' : statusLabel[competition.status] }}</button><router-link class="btn lg" :to="{ path: '/billetterie', query: { promo: c.code } }">Vendre des billets · 1 point par vente</router-link><button class="btn lg" type="button" @click="openShare(c)">Partager</button></div>
+      <div class="detail-actions"><button class="btn gold lg" :disabled="competition.status !== 'open'" @click="openVote(c)">{{ competition.status === 'open' ? 'Voter pour ce talent' : statusLabel[competition.status] }}</button><router-link class="btn lg" :to="{ path: '/billetterie', query: { promo: c.promoCode } }">Vendre des billets · 1 point par vente</router-link><button class="btn lg" type="button" @click="openShare(c)">Partager</button></div>
       <Countdown v-if="competition.status === 'open'" :target="competition.endsAt" />
       <div class="gal"><img v-for="g in c.gallery" :key="g" :src="g" :alt="`Galerie de ${c.name}`" loading="lazy" /></div></div></div>
 </div></section></div></template>
