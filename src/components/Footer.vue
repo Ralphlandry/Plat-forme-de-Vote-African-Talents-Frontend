@@ -28,7 +28,7 @@ function submitAuditionForm() {
     <div class="community-title"><span class="community-eyebrow">Communauté</span><h2>Rejoignez<br />la communauté</h2><p>Suivez African Talents sur les réseaux et ne manquez aucune actualité.</p></div>
     <div class="community-links">
       <a class="community-link" :href="contact.whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir WhatsApp"><span aria-hidden="true">◔</span>WhatsApp</a>
-      <a v-for="phone in contact.phones" :key="phone" class="community-link" :href="`tel:${phone.replace(/ /g, '')}`"><span aria-hidden="true">⌕</span>{{ phone }}</a>
+      <a v-for="phone in contact.phones.filter(phone => phone.replace(/\D/g, '') !== '237695065878')" :key="phone" class="community-link" :href="`tel:${phone.replace(/ /g, '')}`"><span aria-hidden="true">⌕</span>{{ phone }}</a>
       <a class="community-link" :href="contact.tiktok" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">♪</span>TikTok</a>
       <a class="community-link" :href="contact.facebook" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">●</span>Facebook</a>
       <a class="community-link" :href="contact.youtube" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span>YouTube</a>

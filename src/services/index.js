@@ -156,6 +156,18 @@ export const contentService = {
       logo: partner.logo?.url || '',
     })).filter(partner => partner.logo)
   },
+  async getAdvertisements() {
+    return (await getList('/public/advertisements/')).map(advertisement => ({
+      id: advertisement.id,
+      title: advertisement.title,
+      image: advertisement.image?.url || '',
+      placement: advertisement.placement,
+      displayDelaySeconds: advertisement.display_delay_seconds,
+      dismissalCooldownHours: advertisement.dismissal_cooldown_hours,
+      buttonLabel: advertisement.button_label,
+      buttonUrl: advertisement.button_url,
+    })).filter(advertisement => advertisement.image)
+  },
 }
 
 export const voteService = {
