@@ -242,9 +242,10 @@ export const ticketService = {
 }
 
 export const rankingService = {
-  async getRanking() {
+  async getRanking(categorySlug = '') {
+    const query = categorySlug ? `?category=${encodeURIComponent(categorySlug)}` : ''
     const [ranking, candidates] = await Promise.all([
-      getList('/public/rankings/'),
+      getList(`/public/rankings/${query}`),
       candidateService.getCandidates(),
     ])
     const candidatesBySlug = new Map(candidates.map(candidate => [candidate.slug, candidate]))
