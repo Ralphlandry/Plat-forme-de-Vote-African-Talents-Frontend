@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { voteTarget, competition } from '../composables/useCompetition'
 import { voteService } from '../services'
+import { normalizeCameroonPhone } from '../utils/phone'
 
 const state = ref('form'), msg = ref('')
 const votePackages = ref([])
@@ -49,8 +50,6 @@ watch(voteTarget, async candidate => {
 })
 const close = () => { if (state.value !== 'loading') voteTarget.value = null }
 const formatAmount = value => `${value.toLocaleString('fr-FR')} ${competition.value.currency || 'FCFA'}`
-const normalizePhone = value => value.replace(/\D/g, '').slice(0, 9)
-
 async function selectPaymentMethod(methodId) {
   paymentMethod.value = methodId
   if (methodId !== 'CARD') {
@@ -169,8 +168,8 @@ function resumePaymentCheck() {
             </div>
             <div v-if="paymentMethod !== 'CARD'" class="payment-field"><label :for="`phone-${paymentMethod}`">Votre numéro {{ selectedPayment.name }}</label>
               <div class="phone-input"><span>+237</span><input :id="`phone-${paymentMethod}`" ref="phoneInput" :value="phone"
-                  inputmode="numeric" placeholder="6XX XX XX XX" maxlength="9"
-                  @input="phone = normalizePhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
+                  inputmode="numeric" placeholder="6XX XX XX XX"
+                  @input="phone = normalizeCameroonPhone($event.target.value)" /></div><small>Numéro mobile camerounais : 9 chiffres, commence par 6.</small>
             </div>
             <label class="consent"><input v-model="accepted" type="checkbox" /><span>J'accepte les <b>conditions d'utilisation</b> et le traitement des informations nécessaires au suivi du paiement <b>(confidentialité)</b>.</span></label>
             <p v-if="msg && state === 'form'" class="vote-error">{{ msg }}</p><button class="btn gold vote-submit" type="button"
