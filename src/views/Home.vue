@@ -4,9 +4,11 @@ import Countdown from '../components/Countdown.vue'
 import Ranking from '../components/Ranking.vue'
 import GallerySlider from '../components/GallerySlider.vue'
 import { competition, statusLabel } from '../composables/useCompetition'
+import { useVoteUpdates } from '../composables/useVoteUpdates'
 import { rankingService, categoryService, contentService } from '../services'
 import { contact, gallerySlides } from '../data/content'
 const ranking = ref([]), cats = ref([]), news = ref([]), coaches = ref([]), teamMembers = ref([]), partners = ref([])
+useVoteUpdates(async () => { ranking.value = await rankingService.getRanking() })
 const teamLeadership = computed(() => teamMembers.value.slice(0, 2))
 const teamSecondLevel = computed(() => teamMembers.value.slice(2))
 const phaseCountdown = computed(() => {

@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import Ranking from '../components/Ranking.vue'
 import Countdown from '../components/Countdown.vue'
+import { useVoteUpdates } from '../composables/useVoteUpdates'
 import { categoryService, rankingService } from '../services'
 import { competition } from '../composables/useCompetition'
 const list = ref([])
@@ -10,17 +11,19 @@ const selectedCategory = ref('')
 const loading = ref(true)
 const error = ref('')
 
-async function loadRanking() {
-  loading.value = true
+async function loadRanking(showLoading = true) {
+  if (showLoading) loading.value = true
   error.value = ''
   try {
     list.value = await rankingService.getRanking(selectedCategory.value)
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : 'Impossible de charger le classement.'
   } finally {
-    loading.value = false
+    if (showLoading) loading.value = false
   }
 }
+
+useVoteUpdates(() => loadRanking(false))
 
 onMounted(async () => {
   try {
@@ -31,7 +34,7 @@ onMounted(async () => {
   await loadRanking()
 })
 
-watch(selectedCategory, loadRanking)
+watch(selectedCategory, () => loadRanking())
 </script>
 <template><div class="page-top"><section class="section" style="padding-top:1rem"><div class="wrap">
   <div class="title"><h1 class="gold-text" style="font-size:clamp(2.4rem,6vw,4rem)">Classement</h1><Countdown v-if="competition.status === 'open'" :target="competition.endsAt" style="display:flex;flex-direction:column;align-items:center" /></div>
@@ -43,8 +46,11 @@ watch(selectedCategory, loadRanking)
     </select>
   </div>
   <div v-if="loading" class="state"><div class="spin"></div></div>
-  <div v-else-if="error" class="state" role="alert">{{ error }}</div>
-  <Ranking v-else :list="list" />
+  <div v-else-if="error && !list.length" class="state" role="alert">{{ error }}</div>
+  <template v-else>
+    <p v-if="error" class="state" role="alert">{{ error }}</p>
+    <Ranking :list="list" />
+  </template>
 </div></section></div></template>
 
 <style scoped>

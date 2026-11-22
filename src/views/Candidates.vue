@@ -2,10 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import CandidateCard from '../components/CandidateCard.vue'
+import { useVoteUpdates } from '../composables/useVoteUpdates'
 import { candidateService, categoryService } from '../services'
 import { competition, statusLabel } from '../composables/useCompetition'
 const route = useRoute()
 const list = ref([]), cats = ref([]), loading = ref(true), q = ref(''), cat = ref(route.query.cat || 'all'), sort = ref('votes'), shown = ref(8)
+useVoteUpdates(async () => { list.value = await candidateService.getCandidates() })
 const glow = ref({ x: 0, y: 0, visible: false })
 function updateGlow(event) {
   if (event.pointerType !== 'mouse') return

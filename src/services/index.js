@@ -198,6 +198,14 @@ export const voteService = {
   },
 }
 
+export const voteEventsService = {
+  connect() {
+    const url = new URL(`${API_BASE_URL.replace(/\/+$/, '')}/public/vote-events/`)
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+    return new WebSocket(url)
+  },
+}
+
 export const ticketService = {
   async getTypes() {
     return getList('/public/ticket-types/')

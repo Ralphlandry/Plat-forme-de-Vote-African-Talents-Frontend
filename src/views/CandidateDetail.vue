@@ -2,11 +2,18 @@
 import { ref, watchEffect } from 'vue'
 import Avatar from '../components/Avatar.vue'
 import Countdown from '../components/Countdown.vue'
+import { useVoteUpdates } from '../composables/useVoteUpdates'
 import { candidateService, rankingService } from '../services'
 import { competition, openShare, openVote, statusLabel } from '../composables/useCompetition'
 import { setPageSeo } from '../utils/seo'
 const props = defineProps({ id: String })
 const c = ref(null), rank = ref(null), err = ref('')
+useVoteUpdates(async () => {
+  if (!c.value) return
+  const updatedCandidate = await candidateService.getCandidate(props.id)
+  c.value = { ...c.value, ...updatedCandidate }
+  rank.value = updatedCandidate.rank ?? rank.value
+})
 const glow = ref({ x: 0, y: 0, visible: false })
 function updateGlow(event) {
   if (event.pointerType !== 'mouse') return
