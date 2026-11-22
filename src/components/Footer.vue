@@ -63,7 +63,7 @@ function submitAuditionForm() {
       <ul><li><b class="gold-text">Contact</b></li><li v-for="p in contact.phones" :key="p"><a :href="'tel:' + p.replace(/ /g, '')">{{ p }}</a></li>
         <li><a :href="contact.tiktok" target="_blank" rel="noopener">TikTok</a> · <a :href="contact.facebook" target="_blank" rel="noopener">Facebook</a> · <a :href="contact.youtube" target="_blank" rel="noopener">YouTube</a></li></ul>
     </div>
-    <p class="copy">© {{ new Date().getFullYear() }} African Talents. Tous droits réservés.</p>
+    <p class="copy">© {{ new Date().getFullYear() }} African Talents. Tous droits réservés. By nenxel.</p>
   </div></footer>
 </template>
 
